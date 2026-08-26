@@ -1,0 +1,2342 @@
+Build a complete, production-quality ADMIN CONTROL PORTAL for the
+"LearnPath AI" personalized learning platform.
+
+IMPORTANT:
+This is a FRONTEND-ONLY implementation.
+
+Do NOT implement:
+- Backend
+- MongoDB
+- FastAPI
+- Real authentication
+- Real AI
+- Real external APIs
+- Real YouTube integration
+- Real GitHub integration
+- Real recommendation engine
+
+Use realistic mock data and frontend state.
+
+The Admin Portal must be designed so that a future FastAPI + MongoDB backend can connect to it without redesigning the frontend.
+
+============================================================
+1. CORE ADMIN CONCEPT
+============================================================
+
+There must be ONE CENTRAL ADMIN PORTAL.
+
+The admin portal is the central control plane of the entire
+LearnPath AI platform.
+
+The administrator should be responsible for essentially every
+configurable function of the platform.
+
+The Admin Portal should NOT be treated as a normal analytics dashboard.
+
+It should function as:
+
+- System Control Center
+- User Management System
+- Learning Content Management System
+- Skill Management System
+- Assessment Management System
+- Recommendation Management System
+- Learning Path Management System
+- AI Configuration Center
+- External Resource Management System
+- Platform Analytics Center
+- Moderation Center
+- Notification Center
+- System Settings Center
+- Audit and Activity Center
+
+The administrator should be able to inspect, configure, enable,
+disable, edit, approve, reject, publish, unpublish, reorder,
+override, and monitor platform functionality.
+
+============================================================
+2. ADMIN ACCESS
+============================================================
+
+There should be a completely separate admin login.
+
+Route:
+
+/admin/login
+
+The admin portal must NOT be accessible through the normal learner
+registration system.
+
+There should be:
+
+/login
+
+for learners.
+
+And:
+
+/admin/login
+
+for administrators.
+
+IMPORTANT:
+
+There must be NO public "Create Admin Account" button.
+
+Administrators cannot register themselves from the frontend.
+
+The UI should clearly communicate:
+
+"Administrator access is restricted."
+
+Admin login fields:
+
+- Email
+- Password
+- Remember Me
+
+Buttons:
+
+- Sign In
+- Forgot Password
+
+Optional future UI:
+
+- Two-Factor Authentication
+
+For this frontend prototype, use mock authentication.
+
+Example:
+
+admin@example.com
+password:
+admin123
+
+After successful login:
+
+/admin/dashboard
+
+============================================================
+3. ADMIN LAYOUT
+============================================================
+
+Create a completely separate admin layout.
+
+Structure:
+
+----------------------------------------------------
+| Admin Topbar                                      |
+----------------------------------------------------
+| Sidebar          | Main Content                  |
+|                  |                               |
+| Dashboard        |                               |
+| Users            |                               |
+| Learning         |                               |
+| Skills           |                               |
+| Assessments      |                               |
+| Resources        |                               |
+| Recommendations  |                               |
+| Learning Paths   |                               |
+| AI Controls      |                               |
+| Analytics        |                               |
+| Notifications    |                               |
+| Moderation       |                               |
+| Audit Logs       |                               |
+| Settings         |                               |
+----------------------------------------------------
+
+The sidebar should be collapsible.
+
+On mobile, convert the sidebar into a drawer.
+
+============================================================
+4. ADMIN TOPBAR
+============================================================
+
+Topbar should contain:
+
+- Platform name
+- Environment indicator
+- Search
+- Notifications
+- System status
+- Admin profile
+- Logout
+
+Example:
+
+LearnPath AI
+ADMIN CONTROL CENTER
+
+Environment:
+Demo
+
+System Status:
+Operational
+
+Admin avatar
+
+Dropdown:
+
+- Profile
+- Security
+- Settings
+- Logout
+
+============================================================
+5. ADMIN DASHBOARD
+============================================================
+
+Route:
+
+/admin/dashboard
+
+This should be the central overview.
+
+Title:
+
+"Platform Control Center"
+
+Subtitle:
+
+"Monitor and control the LearnPath AI platform."
+
+Top statistics:
+
+Total Learners
+Active Learners
+Learning Paths
+Resources
+Assessments
+Projects
+Skills
+AI Conversations
+
+Example:
+
+24,832 Learners
+8,421 Active
+14,320 Paths Generated
+18,492 Resources
+7,320 Assessments
+2,180 Projects
+486 Skills
+42,931 AI Conversations
+
+============================================================
+6. SYSTEM HEALTH
+============================================================
+
+Display system health cards.
+
+Services:
+
+Frontend
+Backend
+Database
+AI Service
+Vector Database
+Recommendation Engine
+External Resource Services
+
+Example:
+
+Frontend:
+Operational
+
+Backend:
+Operational
+
+AI Service:
+Operational
+
+Vector Search:
+Operational
+
+Show:
+
+Green:
+Operational
+
+Yellow:
+Warning
+
+Red:
+Unavailable
+
+For frontend prototype, use mock status.
+
+============================================================
+7. PLATFORM ACTIVITY
+============================================================
+
+Show real-time style activity feed.
+
+Examples:
+
+"New learner registered"
+
+"Assessment generated"
+
+"Learning path created"
+
+"Resource approved"
+
+"Admin modified skill"
+
+"Recommendation engine configuration updated"
+
+"User account suspended"
+
+"New project published"
+
+"AI configuration changed"
+
+Display:
+
+Time
+Event
+User/Admin
+Action
+
+============================================================
+8. USER MANAGEMENT
+============================================================
+
+Route:
+
+/admin/users
+
+This is a major administrative module.
+
+Admin can:
+
+- View users
+- Search users
+- Filter users
+- View learner profiles
+- Edit learner information
+- Suspend users
+- Activate users
+- Delete users
+- Reset passwords
+- View learning history
+- View assessment history
+- View progress
+- View recommendations
+- View AI conversations
+- View feedback
+
+Table:
+
+Name
+Email
+Status
+Experience
+Primary Goal
+Progress
+Joined
+Last Active
+Actions
+
+Actions:
+
+View
+Edit
+Suspend
+Activate
+Delete
+
+Use confirmation modals for destructive actions.
+
+============================================================
+9. LEARNER DETAIL CONTROL
+============================================================
+
+Route:
+
+/admin/users/:id
+
+Admin should see the complete learner profile.
+
+Sections:
+
+------------------------------------------------
+Profile
+------------------------------------------------
+
+Name
+Email
+Education
+Experience
+Location
+Language
+
+------------------------------------------------
+Goals
+------------------------------------------------
+
+Primary Goal
+Secondary Goals
+Timeline
+Target Outcome
+
+------------------------------------------------
+Skills
+------------------------------------------------
+
+Self-Reported Skill
+Verified Skill
+Confidence
+Last Assessment
+
+------------------------------------------------
+Learning History
+------------------------------------------------
+
+Courses
+Projects
+Certifications
+Resources
+
+------------------------------------------------
+Assessment History
+------------------------------------------------
+
+Assessment
+Score
+Date
+Difficulty
+
+------------------------------------------------
+Learning Path
+------------------------------------------------
+
+Current Phase
+Progress
+Completed Modules
+Upcoming Modules
+
+------------------------------------------------
+Activity
+------------------------------------------------
+
+Login
+Learning
+Assessment
+Resources
+AI Assistant
+
+Admin actions:
+
+Edit Profile
+Reset Assessment
+Recalculate Skills
+Regenerate Learning Path
+Suspend Account
+Delete Account
+
+============================================================
+10. USER STATUS CONTROL
+============================================================
+
+Admin should be able to change:
+
+Active
+Suspended
+Inactive
+Restricted
+
+When suspended, show confirmation:
+
+"Suspending this learner will prevent access to the platform."
+
+Buttons:
+
+Cancel
+Confirm Suspension
+
+============================================================
+11. LEARNING CONTENT MANAGEMENT
+============================================================
+
+Route:
+
+/admin/learning
+
+This should control all learning content.
+
+Content types:
+
+- Courses
+- Videos
+- Articles
+- Documentation
+- Exercises
+- Projects
+- Quizzes
+- Labs
+- Certifications
+
+Admin can:
+
+Create
+Edit
+Delete
+Publish
+Unpublish
+Archive
+Feature
+Hide
+
+============================================================
+12. COURSE MANAGEMENT
+============================================================
+
+Route:
+
+/admin/learning/courses
+
+Course table:
+
+Course Name
+Category
+Difficulty
+Skills
+Duration
+Status
+Resources
+Last Updated
+
+Actions:
+
+View
+Edit
+Publish
+Unpublish
+Archive
+Delete
+
+Course editor:
+
+Title
+Description
+Category
+Difficulty
+Prerequisites
+Skills
+Learning objectives
+Duration
+Modules
+Resources
+Projects
+Assessments
+
+Admin should be able to reorder modules using drag and drop.
+
+============================================================
+13. RESOURCE MANAGEMENT
+============================================================
+
+Route:
+
+/admin/resources
+
+Admin controls all learning resources.
+
+Sources:
+
+YouTube
+GitHub
+Kaggle
+Documentation
+Internal
+Other
+
+Table:
+
+Resource
+Source
+Type
+Skill
+Difficulty
+Quality Score
+Status
+Last Updated
+
+Actions:
+
+View
+Edit
+Approve
+Reject
+Disable
+Delete
+Feature
+
+============================================================
+14. EXTERNAL RESOURCE CONTROL
+============================================================
+
+Create:
+
+/admin/resources/external
+
+Admin can control external resource sources.
+
+Source cards:
+
+YouTube
+GitHub
+Kaggle
+Documentation
+
+Each source should show:
+
+Status
+Last Sync
+Resources Found
+Approved Resources
+Rejected Resources
+
+Controls:
+
+Enable Source
+Disable Source
+Sync Now
+Configure
+View Resources
+
+Do NOT implement actual API calls.
+
+Use mock UI.
+
+============================================================
+15. RESOURCE APPROVAL SYSTEM
+============================================================
+
+External resources should NOT automatically become visible to learners.
+
+Create an approval workflow:
+
+Discovered
+        |
+        v
+Pending Review
+        |
+   +----+----+
+   |         |
+Approve    Reject
+   |
+   v
+Published
+
+Admin should be able to:
+
+Approve
+Reject
+Edit metadata
+Assign skills
+Assign difficulty
+Add prerequisites
+Feature resource
+Hide resource
+
+============================================================
+16. SKILL MANAGEMENT
+============================================================
+
+Route:
+
+/admin/skills
+
+This is one of the most important modules.
+
+Admin controls the complete skill taxonomy.
+
+Skills include:
+
+Programming
+Python
+Java
+C++
+Statistics
+Machine Learning
+Deep Learning
+NLP
+Computer Vision
+LLMs
+RAG
+MLOps
+Cloud
+DevOps
+System Design
+etc.
+
+Admin actions:
+
+Create Skill
+Edit Skill
+Delete Skill
+Merge Skill
+Disable Skill
+
+Skill properties:
+
+Name
+Description
+Category
+Difficulty
+Learning Objectives
+Prerequisites
+Related Skills
+Required Competency
+Tags
+
+============================================================
+17. SKILL KNOWLEDGE GRAPH CONTROL
+============================================================
+
+Route:
+
+/admin/skills/graph
+
+Use React Flow.
+
+Admin can visually manage:
+
+Skill nodes
+Prerequisite relationships
+Related skills
+Skill hierarchy
+
+Example:
+
+Python
+   |
+NumPy
+   |
+Statistics
+   |
+Machine Learning
+   |
+Deep Learning
+   |
+Transformers
+   |
+LLMs
+   |
+RAG
+
+Admin can:
+
+Add Node
+Delete Node
+Edit Node
+Create Relationship
+Delete Relationship
+Change Relationship Type
+
+Relationship types:
+
+Prerequisite
+Related
+Advanced Version
+Alternative
+Part Of
+
+============================================================
+18. ASSESSMENT MANAGEMENT
+============================================================
+
+Route:
+
+/admin/assessments
+
+Admin controls all assessments.
+
+Dashboard:
+
+Total Assessments
+Active
+Completed
+Average Score
+Average Improvement
+
+Assessment table:
+
+Assessment Name
+Skill
+Difficulty
+Questions
+Average Score
+Status
+
+Actions:
+
+View
+Edit
+Publish
+Unpublish
+Archive
+Delete
+
+============================================================
+19. QUESTION BANK
+============================================================
+
+Route:
+
+/admin/questions
+
+Admin controls the entire question bank.
+
+Fields:
+
+Question
+Skill
+Topic
+Difficulty
+Correct Answer
+Explanation
+Learning Objective
+Question Type
+Status
+
+Question types:
+
+MCQ
+Multiple Select
+True/False
+Scenario
+Code Output
+Short Answer
+
+Actions:
+
+Create
+Edit
+Delete
+Approve
+Disable
+Preview
+
+============================================================
+20. AI QUESTION GENERATION CONTROL
+============================================================
+
+Create:
+
+/admin/ai/assessment-generator
+
+The admin should be able to configure how questions are generated.
+
+Controls:
+
+Number of questions
+Difficulty distribution
+Skill distribution
+Topic distribution
+Question types
+Assessment duration
+Passing score
+
+Example:
+
+Python:
+20%
+
+Statistics:
+20%
+
+Machine Learning:
+40%
+
+Deep Learning:
+20%
+
+Difficulty:
+
+Easy:
+20%
+
+Medium:
+50%
+
+Hard:
+30%
+
+Button:
+
+"Preview Generated Assessment"
+
+For frontend demo, show mock generated questions.
+
+============================================================
+21. LEARNING PATH MANAGEMENT
+============================================================
+
+Route:
+
+/admin/learning-paths
+
+Admin can view all generated learning paths.
+
+Columns:
+
+Goal
+Learner
+Progress
+Phases
+Status
+Created
+Last Updated
+
+Actions:
+
+View
+Edit
+Regenerate
+Approve
+Archive
+Delete
+
+============================================================
+22. LEARNING PATH BUILDER
+============================================================
+
+Create:
+
+/admin/learning-paths/builder
+
+Admin can manually create or modify a learning path.
+
+Fields:
+
+Goal
+Description
+Target Outcome
+Estimated Duration
+
+Phases:
+
+Phase 1
+Phase 2
+Phase 3
+...
+
+Each phase:
+
+Skills
+Prerequisites
+Resources
+Projects
+Assessment
+Milestone
+
+Use drag-and-drop.
+
+Admin should be able to:
+
+Add Phase
+Delete Phase
+Reorder Phase
+Add Resource
+Remove Resource
+Add Assessment
+Add Project
+
+============================================================
+23. RECOMMENDATION MANAGEMENT
+============================================================
+
+Route:
+
+/admin/recommendations
+
+Admin should have visibility into the recommendation system.
+
+Display:
+
+Total Recommendations
+Accepted
+Rejected
+Skipped
+Saved
+
+Recommendation table:
+
+Learner
+Resource
+Skill
+Reason
+Score
+Status
+
+Example:
+
+Learner:
+John
+
+Resource:
+Transformers Explained
+
+Recommendation Score:
+91%
+
+Reason:
+
+"Matches current skill gap."
+
+============================================================
+24. RECOMMENDATION ENGINE CONTROLS
+============================================================
+
+Create:
+
+/admin/recommendations/settings
+
+Admin can configure recommendation weights.
+
+Example:
+
+Skill Gap Match
+30%
+
+Semantic Similarity
+20%
+
+Prerequisite Match
+15%
+
+Difficulty Match
+10%
+
+Goal Alignment
+10%
+
+Learning Preference
+5%
+
+Resource Quality
+5%
+
+Historical Feedback
+5%
+
+Use sliders.
+
+Display:
+
+"Total Weight: 100%"
+
+Prevent saving if total is not 100%.
+
+Other controls:
+
+Minimum resource quality
+Maximum recommendations
+Diversity settings
+Difficulty tolerance
+Prefer free resources
+Prefer short resources
+Prefer projects
+Prefer videos
+
+============================================================
+25. AI CONTROL CENTER
+============================================================
+
+Route:
+
+/admin/ai
+
+This should be a central AI management interface.
+
+Sections:
+
+AI Model
+Prompt Configuration
+Question Generation
+Goal Analysis
+Resource Analysis
+Recommendation Explanation
+Learning Assistant
+RAG Configuration
+
+============================================================
+26. AI MODEL CONFIGURATION
+============================================================
+
+Display:
+
+Current Model:
+
+Qwen
+
+Model Status:
+
+Operational
+
+Admin controls:
+
+Model Name
+Temperature
+Max Tokens
+Context Length
+Response Style
+
+Use sliders/input fields.
+
+Do not actually change an AI model.
+
+Mock functionality only.
+
+============================================================
+27. AI PROMPT MANAGEMENT
+============================================================
+
+Admin should be able to view and edit prompts.
+
+Prompt categories:
+
+Goal Analysis Prompt
+Assessment Generation Prompt
+Resource Analysis Prompt
+Recommendation Explanation Prompt
+Learning Path Prompt
+AI Assistant System Prompt
+
+Display prompt editor.
+
+Example:
+
+Prompt Name:
+Goal Analysis
+
+Version:
+v1.3
+
+Status:
+Active
+
+Buttons:
+
+Edit
+Save Draft
+Publish
+Rollback
+
+============================================================
+28. PROMPT VERSION CONTROL
+============================================================
+
+Create a version history.
+
+Example:
+
+v1.0
+v1.1
+v1.2
+v1.3 ACTIVE
+
+Admin can:
+
+View
+Compare
+Restore
+
+This is important because AI behavior should be controllable by the administrator.
+
+============================================================
+29. RAG CONTROL CENTER
+============================================================
+
+Route:
+
+/admin/ai/rag
+
+Display:
+
+Documents Indexed
+Embeddings
+Vector Database Status
+Last Indexing
+Search Quality
+
+Controls:
+
+Re-index
+Clear Index
+Update Embeddings
+View Sources
+
+Mock UI only.
+
+============================================================
+30. AI ASSISTANT MONITORING
+============================================================
+
+Route:
+
+/admin/ai/conversations
+
+Admin can monitor AI assistant usage.
+
+Table:
+
+User
+Conversation
+Messages
+Date
+Feedback
+Status
+
+Admin can inspect a conversation.
+
+Show:
+
+User Message
+AI Response
+Retrieved Context
+Recommendation
+
+This is for monitoring and quality improvement.
+
+============================================================
+31. AI SAFETY AND CONTROL
+============================================================
+
+Create:
+
+/admin/ai/safety
+
+Controls:
+
+Enable/Disable AI Assistant
+Enable/Disable AI Assessment Generation
+Enable/Disable AI Learning Path Generation
+Enable/Disable External Resource Analysis
+
+Safety settings:
+
+Maximum response length
+Blocked topics
+Response restrictions
+Escalation settings
+
+Show warning confirmation before disabling major AI functions.
+
+============================================================
+32. PLATFORM CONFIGURATION
+============================================================
+
+Route:
+
+/admin/settings/platform
+
+Admin controls:
+
+Platform Name
+Logo
+Tagline
+Default Language
+Default Time Zone
+Maintenance Mode
+Registration Enabled
+Learner Login Enabled
+AI Enabled
+Resource Discovery Enabled
+
+============================================================
+33. REGISTRATION CONTROL
+============================================================
+
+Admin should be able to control onboarding.
+
+Settings:
+
+Enable Registration
+Allow New Learners
+Required Fields
+Optional Fields
+Minimum Age
+Experience Options
+Knowledge Areas
+Learning Preferences
+
+Admin can decide which onboarding questions are active.
+
+============================================================
+34. ONBOARDING QUESTION BUILDER
+============================================================
+
+Route:
+
+/admin/settings/onboarding
+
+Admin can create custom onboarding questions.
+
+Question fields:
+
+Question
+Description
+Type
+Required
+Options
+Category
+
+Question types:
+
+Text
+Single Select
+Multiple Select
+Slider
+Dropdown
+Number
+Date
+
+Admin can:
+
+Add
+Edit
+Delete
+Reorder
+Enable
+Disable
+
+This means the administrator can control the learner profiling system without changing frontend code.
+
+============================================================
+35. NOTIFICATION MANAGEMENT
+============================================================
+
+Route:
+
+/admin/notifications
+
+Admin can create platform-wide notifications.
+
+Fields:
+
+Title
+Message
+Type
+Target Audience
+Priority
+Start Date
+End Date
+
+Target:
+
+All Learners
+Beginner
+Intermediate
+Advanced
+Specific Goal
+Specific Skill
+
+Actions:
+
+Draft
+Publish
+Schedule
+Disable
+
+============================================================
+36. ANNOUNCEMENTS
+============================================================
+
+Create:
+
+/admin/announcements
+
+Admin can create:
+
+Platform announcements
+Learning campaigns
+Maintenance notices
+Assessment reminders
+
+Show preview before publishing.
+
+============================================================
+37. MODERATION CENTER
+============================================================
+
+Route:
+
+/admin/moderation
+
+Admin can review:
+
+Reported resources
+Reported AI responses
+Reported content
+User feedback
+Abuse reports
+
+Statuses:
+
+Pending
+Investigating
+Resolved
+Rejected
+
+Actions:
+
+Review
+Resolve
+Reject
+Escalate
+
+============================================================
+38. FEEDBACK MANAGEMENT
+============================================================
+
+Route:
+
+/admin/feedback
+
+Display:
+
+Resource feedback
+Learning-path feedback
+AI feedback
+Assessment feedback
+
+Metrics:
+
+Positive
+Neutral
+Negative
+
+Admin can filter by:
+
+Resource
+Skill
+User
+Feedback type
+
+============================================================
+39. PLATFORM ANALYTICS
+============================================================
+
+Route:
+
+/admin/analytics
+
+Create comprehensive analytics.
+
+Metrics:
+
+User registrations
+Active learners
+Retention
+Learning hours
+Completed courses
+Completed projects
+Assessment improvement
+Skill improvement
+Learning path completion
+Resource engagement
+AI usage
+
+Charts:
+
+Registration trends
+Learning activity
+Assessment scores
+Skill growth
+Resource usage
+Goal distribution
+
+============================================================
+40. GOAL ANALYTICS
+============================================================
+
+Show:
+
+Most popular goals.
+
+Example:
+
+Software Engineer
+32%
+
+AI Engineer
+24%
+
+Data Scientist
+18%
+
+Web Developer
+14%
+
+Other
+12%
+
+Allow filtering by:
+
+Date
+Education
+Experience
+Region
+Goal
+
+============================================================
+41. SKILL ANALYTICS
+============================================================
+
+Display:
+
+Most requested skills.
+
+Example:
+
+Python
+Machine Learning
+React
+Java
+SQL
+Deep Learning
+LLMs
+Cloud
+
+Also display:
+
+Skills with largest learner gaps.
+
+============================================================
+42. RESOURCE ANALYTICS
+============================================================
+
+Display:
+
+Most viewed resources
+Most completed resources
+Most skipped resources
+Highest rated resources
+Lowest rated resources
+Most recommended resources
+
+Admin can identify poor-quality resources.
+
+============================================================
+43. ASSESSMENT ANALYTICS
+============================================================
+
+Display:
+
+Average score
+Pass rate
+Failure rate
+Improvement
+Question difficulty
+
+Question analysis:
+
+Question
+Correct %
+Incorrect %
+Difficulty
+
+Identify problematic questions.
+
+Example:
+
+"Question 14 has only 21% correct responses."
+
+Admin can review it.
+
+============================================================
+44. AUDIT LOGS
+============================================================
+
+Route:
+
+/admin/audit-logs
+
+Every important administrative action should appear here.
+
+Examples:
+
+Admin changed recommendation weights.
+
+Admin deleted resource.
+
+Admin suspended learner.
+
+Admin modified skill prerequisite.
+
+Admin changed onboarding question.
+
+Admin published assessment.
+
+Admin changed AI prompt.
+
+Table:
+
+Timestamp
+Admin
+Action
+Module
+Target
+Status
+
+Filters:
+
+Date
+Admin
+Module
+Action
+
+============================================================
+45. SYSTEM ACTIVITY LOG
+============================================================
+
+Route:
+
+/admin/system-logs
+
+Show:
+
+Login attempts
+System errors
+Resource synchronization
+Assessment generation
+Recommendation generation
+AI requests
+
+For frontend prototype, use mock logs.
+
+============================================================
+46. SECURITY CENTER
+============================================================
+
+Route:
+
+/admin/security
+
+Display:
+
+Admin login history
+Failed login attempts
+Active sessions
+Last password change
+
+Controls:
+
+Change password
+Logout all sessions
+Enable 2FA
+Session timeout
+
+For frontend only, these controls should be mock.
+
+============================================================
+47. ADMIN PROFILE
+============================================================
+
+Route:
+
+/admin/profile
+
+Display:
+
+Name
+Email
+Role
+Last login
+Account created
+
+Security:
+
+Change Password
+2FA
+Sessions
+
+============================================================
+48. ADMIN SETTINGS
+============================================================
+
+Route:
+
+/admin/settings
+
+Tabs:
+
+General
+Platform
+Registration
+AI
+Recommendations
+Resources
+Notifications
+Security
+
+Everything should be centrally configurable.
+
+============================================================
+49. GLOBAL SEARCH
+============================================================
+
+Admin should have a global search.
+
+Search across:
+
+Users
+Skills
+Resources
+Courses
+Assessments
+Learning Paths
+Projects
+Feedback
+
+Example:
+
+Search:
+"Machine Learning"
+
+Results:
+
+Skills
+Resources
+Users
+Learning Paths
+Assessments
+
+============================================================
+50. BULK ACTIONS
+============================================================
+
+Admin should be able to select multiple records.
+
+Bulk actions:
+
+Approve
+Reject
+Publish
+Unpublish
+Archive
+Delete
+Suspend
+Activate
+
+Show confirmation before destructive actions.
+
+============================================================
+51. CONFIRMATION SYSTEM
+============================================================
+
+Any destructive action must show a confirmation modal.
+
+Example:
+
+"Delete this learning resource?"
+
+"This action cannot be undone."
+
+Buttons:
+
+Cancel
+Delete
+
+For major system changes:
+
+"Are you sure you want to disable AI-generated assessments?"
+
+Buttons:
+
+Cancel
+Confirm
+
+============================================================
+52. SYSTEM-WIDE FEATURE FLAGS
+============================================================
+
+Create:
+
+/admin/settings/features
+
+Admin can enable/disable:
+
+AI Assistant
+Diagnostic Assessments
+Adaptive Learning
+External Resources
+Projects
+Gamification
+Recommendations
+Skill Graph
+Progress Tracking
+AI-generated Questions
+
+Each feature:
+
+Name
+Description
+Status
+Toggle
+
+Show warning for critical features.
+
+============================================================
+53. CONTENT PUBLISHING WORKFLOW
+============================================================
+
+Implement a common content state system.
+
+States:
+
+Draft
+Pending Review
+Approved
+Published
+Unpublished
+Archived
+
+Use badges consistently.
+
+============================================================
+54. ADMIN DASHBOARD QUICK ACTIONS
+============================================================
+
+Dashboard should have:
+
+Quick Actions:
+
+Add Skill
+Add Resource
+Create Assessment
+Create Learning Path
+Create Announcement
+Review Reports
+Manage Users
+AI Settings
+
+============================================================
+55. ADMIN RESPONSIBILITY MAP
+============================================================
+
+Create a visual section on the dashboard showing:
+
+                    ADMIN
+                      |
+      +---------------+---------------+
+      |               |               |
+    USERS          CONTENT           AI
+      |               |               |
+  Profiles       Resources        Models
+  Progress       Courses          Prompts
+  Assessments    Projects         RAG
+  Activity       Skills           Assistant
+      |               |               |
+      +---------------+---------------+
+                      |
+                RECOMMENDATION
+                      |
+               LEARNING PATH
+                      |
+                 ANALYTICS
+                      |
+                SYSTEM CONTROL
+
+This visually communicates that the administrator controls the entire ecosystem.
+
+============================================================
+56. ADMIN NOTIFICATION CENTER
+============================================================
+
+Admin notifications:
+
+"23 resources are awaiting approval."
+
+"5 reports require review."
+
+"Assessment generation failed."
+
+"AI service warning."
+
+"New skill has been suggested."
+
+"System maintenance scheduled."
+
+Show priority:
+
+Low
+Medium
+High
+Critical
+
+============================================================
+57. ADMIN DASHBOARD ALERTS
+============================================================
+
+Create an alerts section.
+
+Example:
+
+HIGH PRIORITY
+
+12 resources have low quality scores.
+
+ACTION REQUIRED
+
+7 assessment questions have unusually low validity.
+
+WARNING
+
+External resource synchronization is delayed.
+
+CRITICAL
+
+AI service unavailable.
+
+Each alert should have:
+
+View
+Resolve
+Dismiss
+
+============================================================
+58. MOCK ADMIN DATA
+============================================================
+
+Create realistic mock datasets.
+
+Files:
+
+src/data/admin/
+    users.ts
+    resources.ts
+    skills.ts
+    assessments.ts
+    questions.ts
+    learningPaths.ts
+    recommendations.ts
+    analytics.ts
+    auditLogs.ts
+    notifications.ts
+    systemStatus.ts
+    aiSettings.ts
+
+Use realistic data rather than lorem ipsum.
+
+============================================================
+59. ADMIN API-READY STRUCTURE
+============================================================
+
+Create:
+
+src/api/admin/
+
+Files:
+
+users.ts
+resources.ts
+skills.ts
+assessments.ts
+questions.ts
+learningPaths.ts
+recommendations.ts
+ai.ts
+analytics.ts
+notifications.ts
+settings.ts
+auditLogs.ts
+
+For now:
+
+Return mock data.
+
+Later these can connect to FastAPI endpoints.
+
+============================================================
+60. ADMIN COMPONENT ARCHITECTURE
+============================================================
+
+Create reusable components:
+
+components/admin/
+
+AdminLayout
+AdminSidebar
+AdminNavbar
+AdminBreadcrumbs
+AdminPageHeader
+AdminStatCard
+AdminTable
+AdminFilters
+AdminSearch
+AdminModal
+AdminConfirmDialog
+AdminDrawer
+AdminTabs
+AdminBadge
+AdminChart
+AdminEmptyState
+AdminAlert
+AdminActivityFeed
+AdminStatusIndicator
+
+============================================================
+61. ADMIN TABLE DESIGN
+============================================================
+
+All tables should support:
+
+Search
+Sort
+Filter
+Pagination
+Column visibility
+Row selection
+Bulk actions
+
+Do not create static tables.
+
+Use reusable table components.
+
+============================================================
+62. RESPONSIVE ADMIN DESIGN
+============================================================
+
+Desktop:
+
+Full sidebar + content.
+
+Tablet:
+
+Collapsed sidebar.
+
+Mobile:
+
+Drawer navigation.
+
+Tables:
+
+Convert to responsive cards where necessary.
+
+Charts:
+
+Responsive.
+
+============================================================
+63. ADMIN ROLE SECURITY UI
+============================================================
+
+Even though authentication is mocked, the UI should be structured as if admin security is critical.
+
+Do not expose admin navigation to learners.
+
+Do not show admin links in learner navigation.
+
+Do not show:
+
+"Register as Admin"
+
+anywhere.
+
+Admin routes should be protected by:
+
+AdminProtectedRoute
+
+============================================================
+64. ADMIN LOGOUT
+============================================================
+
+Admin logout should:
+
+Clear mock session.
+
+Redirect to:
+
+/admin/login
+
+Display:
+
+"You have been securely logged out."
+
+============================================================
+65. ADMIN FRONTEND FLOW
+============================================================
+
+The complete admin flow should be:
+
+Admin Login
+      |
+      v
+Admin Dashboard
+      |
+      +---- Users
+      |
+      +---- Learning Content
+      |
+      +---- Resources
+      |
+      +---- Skills
+      |
+      +---- Assessments
+      |
+      +---- Learning Paths
+      |
+      +---- Recommendations
+      |
+      +---- AI Control Center
+      |
+      +---- Analytics
+      |
+      +---- Notifications
+      |
+      +---- Moderation
+      |
+      +---- Audit Logs
+      |
+      +---- Security
+      |
+      +---- Settings
+
+Everything should be accessible from the central admin sidebar.
+
+============================================================
+66. ADMIN CONTROL PRINCIPLE
+============================================================
+
+The platform should follow this principle:
+
+"Nothing important should require a developer to modify frontend
+code when it can reasonably be controlled through the Admin Portal."
+
+Examples:
+
+If the admin wants to:
+
+Add a skill
+        |
+        v
+Admin Portal
+
+Change prerequisite
+        |
+        v
+Admin Portal
+
+Disable resource
+        |
+        v
+Admin Portal
+
+Change assessment configuration
+        |
+        v
+Admin Portal
+
+Change recommendation weights
+        |
+        v
+Admin Portal
+
+Change onboarding question
+        |
+        v
+Admin Portal
+
+Disable AI assistant
+        |
+        v
+Admin Portal
+
+Create announcement
+        |
+        v
+Admin Portal
+
+Suspend learner
+        |
+        v
+Admin Portal
+
+Modify learning path
+        |
+        v
+Admin Portal
+
+All should have corresponding frontend interfaces.
+
+============================================================
+67. IMPORTANT: DO NOT OVERBUILD THE FRONTEND
+============================================================
+
+Although the Admin Portal should expose comprehensive controls,
+do not implement actual backend functionality.
+
+Every control should currently:
+
+1. Update mock frontend state.
+2. Show a success notification.
+3. Update the UI.
+4. Persist demo state in localStorage where appropriate.
+
+Example:
+
+Admin changes:
+
+MLOps required level
+70% -> 80%
+
+The UI should immediately update.
+
+Later the backend will persist the change.
+
+============================================================
+68. ADMIN DEMO SCENARIO
+============================================================
+
+A reviewer should be able to log in as admin and demonstrate:
+
+1. View platform dashboard.
+2. View total users.
+3. Open a learner.
+4. View learner skill profile.
+5. Suspend a learner.
+6. Create a skill.
+7. Edit a skill.
+8. Modify prerequisite relationships.
+9. Review resources.
+10. Approve a resource.
+11. Reject a resource.
+12. Create an assessment.
+13. Edit an assessment.
+14. Edit a question.
+15. Configure assessment difficulty.
+16. Modify recommendation weights.
+17. View generated learning paths.
+18. Edit a learning path.
+19. Configure AI settings.
+20. Edit an AI prompt.
+21. View AI conversations.
+22. View analytics.
+23. Create an announcement.
+24. Review moderation reports.
+25. View audit logs.
+26. Modify platform settings.
+27. Enable/disable features.
+28. View security information.
+29. Logout.
+
+All interactions should work in the frontend prototype.
+
+============================================================
+69. VISUAL QUALITY
+============================================================
+
+The Admin Portal should look like an enterprise SaaS administration
+platform.
+
+Use:
+
+- Clean tables
+- Strong information hierarchy
+- Professional charts
+- Consistent badges
+- Clear action buttons
+- Confirmation dialogs
+- Side panels
+- Filters
+- Search
+- Pagination
+- Responsive layouts
+
+Avoid:
+
+- Huge empty spaces
+- Excessive animations
+- Excessive gradients
+- Cartoon designs
+- Gaming-style dashboards
+
+The admin interface should feel powerful and professional.
+
+============================================================
+70. FINAL REQUIREMENT
+============================================================
+
+Create ONE centralized Admin Portal that acts as the control center
+for the entire LearnPath AI ecosystem.
+
+The admin must be able to control:
+
+Users
+Profiles
+Registration
+Onboarding
+Skills
+Skill Graph
+Courses
+Resources
+External Sources
+Projects
+Assessments
+Questions
+Learning Paths
+Recommendations
+AI Models
+AI Prompts
+RAG
+AI Assistant
+Notifications
+Announcements
+Feedback
+Moderation
+Analytics
+Feature Flags
+Platform Settings
+Security
+Audit Logs
+System Status
+
+The frontend must be fully functional using mock data.
+
+Do not implement backend.
+
+Do not implement MongoDB.
+
+Do not implement FastAPI.
+
+Do not implement real AI.
+
+Do not implement real APIs.
+
+Do not implement real authentication.
+
+The final frontend should look like a real enterprise AI learning
+platform with a highly capable centralized administrator control
+panel.
+
+The key architectural idea is:
+
+LEARNER APPLICATION
+        |
+        v
+LEARNPATH AI PLATFORM
+        |
+        v
+CENTRAL ADMIN CONTROL CENTER
+        |
+        +-----------------------------+
+        |                             |
+        v                             v
+CONTENT / LEARNING               AI / RECOMMENDATIONS
+        |                             |
+        +-------------+---------------+
+                      |
+                      v
+                USERS / DATA
+                      |
+                      v
+                  ANALYTICS
+                      |
+                      v
+                SYSTEM CONTROL
