@@ -1,6 +1,6 @@
-import { AlertTriangle, RefreshCw, Inbox } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Inbox, Loader2 } from 'lucide-react';
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
+// ─── Skeleton Loader ──────────────────────────────────────────────────────────
 
 export function Skeleton({ className = '' }: { className?: string }) {
   return (
@@ -13,9 +13,9 @@ export function Skeleton({ className = '' }: { className?: string }) {
 
 export function SkeletonCard({ rows = 3 }: { rows?: number }) {
   return (
-    <div className="rounded-2xl border border-[#dbe4da] bg-[#fbfaf5] p-6 space-y-4">
+    <div className="rounded-2xl border border-[#dbe4da] bg-[#fbfaf5] p-6 space-y-4 shadow-sm" aria-busy="true">
       <Skeleton className="h-5 w-2/5" />
-      <Skeleton className="h-3 w-3/5" />
+      <Skeleton className="h-3.5 w-3/5" />
       {Array.from({ length: rows }).map((_, i) => (
         <Skeleton key={i} className="h-10 w-full" />
       ))}
@@ -25,7 +25,7 @@ export function SkeletonCard({ rows = 3 }: { rows?: number }) {
 
 export function SkeletonTable({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#dbe4da] bg-[#fbfaf5]">
+    <div className="overflow-hidden rounded-2xl border border-[#dbe4da] bg-[#fbfaf5] shadow-sm" aria-busy="true">
       <div className="grid gap-px bg-[#dbe4da]">
         {Array.from({ length: rows + 1 }).map((_, ri) => (
           <div
@@ -53,22 +53,22 @@ interface ErrorStateProps {
 
 export function ErrorState({
   title = 'Unable to load data',
-  message = 'Something went wrong. Please try again.',
+  message = 'Something went wrong while synchronizing with the server. Please try again.',
   onRetry,
 }: ErrorStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-[#f5d5d0] bg-[#fdf5f4] p-12 text-center">
-      <span className="grid size-14 place-items-center rounded-2xl bg-[#fbe9e5] text-[#a04b3e]">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-[#f5d5d0] bg-[#fdf5f4] p-10 md:p-14 text-center shadow-sm" role="alert">
+      <span className="grid size-14 place-items-center rounded-2xl bg-[#fbe9e5] text-[#a04b3e] shadow-sm">
         <AlertTriangle size={24} />
       </span>
-      <h3 className="mt-5 text-lg font-bold text-[#1f312e]">{title}</h3>
-      <p className="mt-2 max-w-sm text-sm leading-6 text-[#718079]">{message}</p>
+      <h3 className="mt-5 display text-xl font-bold text-[#1f312e]">{title}</h3>
+      <p className="mt-2 max-w-md text-xs md:text-sm leading-relaxed text-[#718079]">{message}</p>
       {onRetry && (
         <button
           onClick={onRetry}
-          className="mt-6 inline-flex items-center gap-2 rounded-xl border border-[#ccd8ce] bg-[#fbfaf5] px-4 py-2.5 text-sm font-bold text-[#36504a] hover:border-[#176b65]"
+          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#176b65] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#115a55] transition shadow-sm"
         >
-          <RefreshCw size={15} /> Try again
+          <RefreshCw size={14} /> Retry Request
         </button>
       )}
     </div>
@@ -85,33 +85,15 @@ interface EmptyStateProps {
 
 export function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-[#dbe4da] bg-[#fbfaf5] p-12 text-center">
-      <span className="grid size-14 place-items-center rounded-2xl bg-[#e3eee7] text-[#176b65]">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-[#dbe4da] bg-[#fbfaf5] p-10 md:p-14 text-center shadow-sm">
+      <span className="grid size-14 place-items-center rounded-2xl bg-[#e3eee7] text-[#176b65] shadow-sm">
         <Inbox size={24} />
       </span>
-      <h3 className="mt-5 text-lg font-bold text-[#1f312e]">{title}</h3>
+      <h3 className="mt-5 display text-xl font-bold text-[#1f312e]">{title}</h3>
       {description && (
-        <p className="mt-2 max-w-sm text-sm leading-6 text-[#718079]">{description}</p>
+        <p className="mt-2 max-w-md text-xs md:text-sm leading-relaxed text-[#718079]">{description}</p>
       )}
       {action && <div className="mt-6">{action}</div>}
-    </div>
-  );
-}
-
-// ─── Connection banner ────────────────────────────────────────────────────────
-
-export function ConnectionBanner({ status }: { status: 'connected' | 'disconnected' | 'reconnecting' }) {
-  if (status === 'connected') return null;
-
-  return (
-    <div
-      className={`fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full px-5 py-2.5 text-xs font-bold shadow-lg ${
-        status === 'reconnecting'
-          ? 'bg-[#fae9bb] text-[#93611a]'
-          : 'bg-[#fbe9e5] text-[#a04b3e]'
-      }`}
-    >
-      {status === 'reconnecting' ? '⟳ Reconnecting to server…' : '✕ Disconnected from server'}
     </div>
   );
 }
