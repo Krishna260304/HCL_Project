@@ -125,14 +125,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-[100dvh] bg-[#f3f4ed] text-[#20322f]">
-      {/* Connection warning banner if disconnected */}
-      {connectionStatus !== 'connected' && (
-        <div className="bg-[#fae9bb] px-4 py-1.5 text-center text-xs font-bold text-[#93611a] border-b border-[#e3ce9c] flex items-center justify-center gap-2">
-          <span className="size-2 rounded-full bg-[#e6a933] animate-ping" />
-          {connectionStatus === 'reconnecting' ? 'Reconnecting to backend…' : 'Disconnected from backend server.'}
-        </div>
-      )}
-
       {/* Desktop Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[254px] flex-col border-r border-[#dbe4da] bg-[#203d38] text-[#deebe0] lg:flex">
         <div className="px-6 py-6">
@@ -188,16 +180,27 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {/* Top bar */}
         <header className="sticky top-0 z-30 flex h-[70px] items-center justify-between border-b border-[#dbe4da] bg-[#f3f4ed]/90 px-5 backdrop-blur-md lg:px-9">
           <div className="flex items-center gap-3">
-            <button onClick={() => setMobile(!mobile)} className="rounded-lg p-2 lg:hidden" data-testid="button-open-sidebar">
+            <button
+              className="lg:hidden rounded-lg p-1.5 text-[#3b514b] hover:bg-[#e4ebe2]"
+              onClick={() => setMobile(true)}
+              aria-label="Open Navigation Menu"
+              data-testid="button-open-sidebar"
+            >
               <Menu size={20} />
             </button>
-            <div className="lg:hidden">
-              <Logo />
-            </div>
-            <div className="hidden items-center gap-2 text-sm text-[#7b8882] md:flex">
-              <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</span>
-              <span className="text-[#c5cdc5]">/</span>
-              <span className="font-bold text-[#36504a]">Active Session</span>
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#73837d]">
+                {location.replace('/', '').replaceAll('-', ' ') || 'Overview'}
+              </span>
+              {connectionStatus === 'connected' ? (
+                <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-[#dceee4] px-2.5 py-0.5 text-[10px] font-bold text-[#176b65]">
+                  <span className="size-1.5 rounded-full bg-[#176b65] animate-pulse" /> Live Backend
+                </span>
+              ) : (
+                <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-[#fef5e7] px-2.5 py-0.5 text-[10px] font-bold text-[#b17820]">
+                  <span className="size-1.5 rounded-full bg-[#e6a933]" /> Standalone Demo Mode
+                </span>
+              )}
             </div>
           </div>
 
@@ -205,6 +208,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <Link
               href="/notifications"
               className="relative rounded-xl p-2.5 text-[#61716c] hover:bg-[#e4ebe2] transition"
+              aria-label="View notifications"
               data-testid="link-header-notifications"
             >
               <Bell size={18} />
@@ -226,7 +230,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <div>
               <div className="flex items-center justify-between">
                 <Logo light />
-                <button onClick={() => setMobile(false)} data-testid="button-close-sidebar">
+                <button onClick={() => setMobile(false)} aria-label="Close Navigation Menu" data-testid="button-close-sidebar">
                   <X />
                 </button>
               </div>

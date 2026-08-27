@@ -45,3 +45,7 @@ Thumbs.db
 *.swo
 artifacts/*/dist/
 staticfiles/
+features.md
+docs/
+PROJECT_DOCUMENTATION.md
+**/PROJECT_DOCUMENTATION.md
