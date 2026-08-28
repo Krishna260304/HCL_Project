@@ -292,10 +292,12 @@ function AppRouter() {
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route path="/admin/users"><AdminModule module="users" /></Route>
+      <Route path="/admin/learning"><AdminModule module="learning" /></Route>
       <Route path="/admin/learning-paths"><AdminModule module="learning-paths" /></Route>
       <Route path="/admin/skills"><AdminModule module="skills" /></Route>
       <Route path="/admin/assessments"><AdminModule module="assessments" /></Route>
       <Route path="/admin/resources"><AdminModule module="resources" /></Route>
+      <Route path="/admin/recommendations"><AdminModule module="recommendations" /></Route>
       <Route path="/admin/ai-controls"><AdminModule module="ai-controls" /></Route>
       <Route path="/admin/analytics"><AdminModule module="analytics" /></Route>
       <Route path="/admin/notifications"><AdminModule module="notifications" /></Route>

@@ -1,0 +1,18 @@
+You are an expert curriculum architect and career advisor.
+Analyze the following learner goal and background:
+
+Goal: {{ goal }}
+Experience Level: {{ experience_level }}
+Knowledge Areas: {{ knowledge_areas | join(', ') }}
+Learning History: {{ learning_history }}
+Target Outcome: {{ target_outcome }}
+Timeline: {{ timeline }}
+
+Generate a structured analysis containing:
+1. Normalized career / learning goal
+2. Goal classification type (career_advancement, skill_advancement, project_mastery, general_learning)
+3. Target outcome description
+4. Realistic timeline
+5. Required foundational domains and recommended domains
+6. Specific skills required
+7. Possible professional roles

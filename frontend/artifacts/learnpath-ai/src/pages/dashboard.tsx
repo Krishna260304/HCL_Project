@@ -44,9 +44,12 @@ export default function Dashboard() {
         learningPathService.getLearningPath().catch(() => null),
         skillService.listSkills({ limit: 3 }).catch(() => []),
       ]);
-      setProgress(p);
-      setPath(lp);
-      setSkills(sk as Skill[]);
+      // The gateway can legitimately return an empty/null payload while a
+      // learner is being provisioned. Keep the dashboard renderable in that
+      // state instead of allowing an unchecked response to crash the route.
+      setProgress(p && typeof p === 'object' ? p : null);
+      setPath(lp && typeof lp === 'object' ? lp : null);
+      setSkills(Array.isArray(sk) ? sk : []);
     } catch {
       setError('Unable to load your dashboard. Please try again.');
     } finally {
@@ -67,10 +70,11 @@ export default function Dashboard() {
   if (error) return <ErrorState title="Dashboard unavailable" message={error} onRetry={load} />;
 
   const displayName = user?.email?.split('@')[0] ?? 'there';
-  const currentPhase = path?.phases?.find(p => p.status === 'current');
-  const overallProgress = path?.total_progress ?? progress?.overall_progress ?? 0;
-  const streak = progress?.learning_streak ?? 0;
-  const totalHours = progress?.total_hours ?? 0;
+  const phases = Array.isArray(path?.phases) ? path.phases : [];
+  const currentPhase = phases.find(p => p.status === 'current');
+  const overallProgress = Number(path?.total_progress ?? progress?.overall_progress ?? 0) || 0;
+  const streak = Number(progress?.learning_streak ?? 0) || 0;
+  const totalHours = Number(progress?.total_hours ?? 0) || 0;
   const prioritySkills = skills.filter(s => s.gap && s.gap > 0).slice(0, 3);
 
   return (
@@ -142,13 +146,13 @@ export default function Dashboard() {
               <Link href="/learning-path" className="text-xs font-bold text-[#176b65]">Details</Link>
             </div>
             <div className="p-6">
-              {path.phases.slice(0, 4).map((phase, i) => (
+              {phases.slice(0, 4).map((phase, i) => (
                 <div key={phase.id} className="relative flex gap-4 pb-6 last:pb-0">
                   <div className="relative flex flex-col items-center">
                     <span className={`z-10 grid size-8 place-items-center rounded-full ${phase.status === 'complete' ? 'bg-[#176b65] text-[#f7f5ed]' : phase.status === 'current' ? 'border-2 border-[#edbc55] bg-[#fae9bb] text-[#a66c15]' : 'border border-[#ccd8ce] bg-[#f2f4ed] text-[#9aa7a0]'}`}>
                       {phase.status === 'complete' ? <Check size={15} /> : <span className="text-xs font-bold">{i + 1}</span>}
                     </span>
-                    {i !== path.phases.length - 1 && <span className="absolute top-8 h-full w-px bg-[#dbe4da]" />}
+                    {i !== phases.length - 1 && <span className="absolute top-8 h-full w-px bg-[#dbe4da]" />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-3">
