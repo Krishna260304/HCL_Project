@@ -464,6 +464,84 @@ export default function OnboardingSkills() {
     return undefined;
   }, [stage, timeLeftSec, examResult]);
 
+  const handleApplyPreset = (preset: 'alex' | 'maya' | 'jordan') => {
+    if (preset === 'alex') {
+      setTargetRole('Full-Stack Web & AI Application Architect');
+      setCurrentRole('Frontend Developer (React)');
+      setExperienceLevel('Intermediate (1-3 years)');
+      setSelectedSkills(['JavaScript', 'TypeScript', 'React', 'HTML', 'CSS', 'Git', 'Tailwind CSS']);
+      setDailyTime(2);
+      setPracticalExperience(practicalExperiences[2] || 'Built complete web apps');
+      setExamResult({
+        attempt_id: 'preset_alex_eval',
+        score: 8,
+        total_questions: 10,
+        percentage: 84,
+        passed: true,
+        feedback: 'Strong foundational mastery in React and TypeScript. Targeted gap detected in API security.',
+        strengths: ['JavaScript Architecture', 'React State Management', 'Git Workflows'],
+        weaknesses: ['REST API Gateway Security', 'JWT Token Rotation'],
+        skill_scores: {
+          'JavaScript': 90,
+          'TypeScript': 85,
+          'React': 88,
+          'Git': 92,
+          'HTML': 95,
+          'CSS': 90,
+        },
+      });
+    } else if (preset === 'maya') {
+      setTargetRole('Machine Learning & LLM Systems Engineer');
+      setCurrentRole('CS Graduate / Data Analyst');
+      setExperienceLevel('Junior (0-1 years)');
+      setSelectedSkills(['Python', 'PyTorch', 'Linear Algebra', 'Pandas', 'NumPy', 'Git']);
+      setDailyTime(3);
+      setPracticalExperience(practicalExperiences[3] || 'Trained machine learning models');
+      setExamResult({
+        attempt_id: 'preset_maya_eval',
+        score: 9,
+        total_questions: 10,
+        percentage: 88,
+        passed: true,
+        feedback: 'Excellent foundation in Python, linear algebra, and data manipulation.',
+        strengths: ['Python Data Structures', 'PyTorch Tensors', 'Linear Algebra'],
+        weaknesses: ['MLOps Deployment', 'Model Quantization'],
+        skill_scores: {
+          'Python': 95,
+          'PyTorch': 85,
+          'Linear Algebra': 90,
+          'Pandas': 92,
+          'Git': 80,
+        },
+      });
+    } else {
+      setTargetRole('Cloud Infrastructure & DevOps Architect');
+      setCurrentRole('Junior Systems Administrator');
+      setExperienceLevel('Intermediate (1-3 years)');
+      setSelectedSkills(['Linux', 'Docker', 'Bash', 'Networking', 'Git', 'Python']);
+      setDailyTime(1.5);
+      setPracticalExperience(practicalExperiences[2] || 'Deployed apps to production cloud');
+      setExamResult({
+        attempt_id: 'preset_jordan_eval',
+        score: 8,
+        total_questions: 10,
+        percentage: 78,
+        passed: true,
+        feedback: 'Solid Linux shell and container fundamentals.',
+        strengths: ['Linux Kernel & Shell', 'Docker Compose', 'Networking'],
+        weaknesses: ['Kubernetes Orchestration', 'Terraform IaC'],
+        skill_scores: {
+          'Linux': 88,
+          'Docker': 82,
+          'Bash': 85,
+          'Networking': 80,
+          'Git': 78,
+        },
+      });
+    }
+    setStage(6); // Jump straight to verified profile summary
+  };
+
   // Real-time AI Goal Analyzer
   const handleAnalyzeCustomGoal = async () => {
     if (!customGoalText.trim()) return;
@@ -683,6 +761,57 @@ export default function OnboardingSkills() {
             </p>
 
             <div className="mt-8 space-y-6">
+              {/* Evaluator Fast Demo Presets */}
+              <div className="rounded-2xl border border-[#cbe0d3] bg-[#eef6f0] p-5 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 font-bold text-xs text-[#176b65]">
+                    <Zap size={14} className="text-[#d89c2c]" /> Evaluator 1-Click Fast Presets (Skip Manual Profiling):
+                  </span>
+                  <span className="font-mono text-[10px] text-[#718a7c]">Auto-Populate Profile</span>
+                </div>
+
+                <div className="grid gap-2.5 sm:grid-cols-3">
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPreset('alex')}
+                    className="p-3 rounded-xl border border-[#cbd5ce] bg-white text-left hover:border-[#176b65] transition shadow-2xs group"
+                  >
+                    <p className="text-xs font-bold text-[#20322f] group-hover:text-[#176b65] transition">
+                      🚀 Alex Rivera
+                    </p>
+                    <p className="text-[10px] text-[#718079] mt-0.5">
+                      Full-Stack & AI Architect · Phase 3 Active
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPreset('maya')}
+                    className="p-3 rounded-xl border border-[#cbd5ce] bg-white text-left hover:border-[#176b65] transition shadow-2xs group"
+                  >
+                    <p className="text-xs font-bold text-[#20322f] group-hover:text-[#176b65] transition">
+                      🎓 Maya Chen
+                    </p>
+                    <p className="text-[10px] text-[#718079] mt-0.5">
+                      ML & LLM Systems Engineer · 15 hrs/wk
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPreset('jordan')}
+                    className="p-3 rounded-xl border border-[#cbd5ce] bg-white text-left hover:border-[#176b65] transition shadow-2xs group"
+                  >
+                    <p className="text-xs font-bold text-[#20322f] group-hover:text-[#176b65] transition">
+                      ☁️ Jordan Patel
+                    </p>
+                    <p className="text-[10px] text-[#718079] mt-0.5">
+                      Cloud & DevOps Architect · 8 hrs/wk
+                    </p>
+                  </button>
+                </div>
+              </div>
+
               {/* Target Role Destination */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-[#40534d]">Target Career Destination</label>
@@ -1083,7 +1212,7 @@ export default function OnboardingSkills() {
                     <div className="mt-5">
                       <p className="text-xs font-bold text-[#3d5048]">Assessed Knowledge Domains:</p>
                       <div className="mt-2 flex flex-wrap gap-1.5">
-                        {(generatedAssessment.skill_ids || selectedSkills.slice(0, 4)).map(s => (
+                        {(generatedAssessment.skill_ids || selectedSkills.slice(0, 4)).map((s: string) => (
                           <span key={s} className="rounded-lg bg-[#e3eee6] px-2.5 py-1 text-xs font-bold text-[#176b65]">{s}</span>
                         ))}
                       </div>

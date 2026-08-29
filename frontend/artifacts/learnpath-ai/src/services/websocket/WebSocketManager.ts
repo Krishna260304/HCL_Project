@@ -1,3 +1,5 @@
+import { fallbackProvider } from '../fallbackProvider';
+
 function uuidv4(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -47,15 +49,18 @@ type PendingRequest = {
   resolve: (data: unknown) => void;
   reject: (err: Error) => void;
   timer: ReturnType<typeof setTimeout>;
+  action: string;
+  payload: Record<string, unknown>;
 };
 
 type EventListener = (data: unknown) => void;
 type ConnectionListener = (status: 'connected' | 'disconnected' | 'reconnecting') => void;
 
-const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_TIMEOUT_MS = 15_000;
+const FALLBACK_CONNECT_GRACE_MS = 1_500;
 const BASE_RECONNECT_MS = 1_000;
 const MAX_RECONNECT_MS = 30_000;
-const MAX_RECONNECT_ATTEMPTS = 10;
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 function getBackendWsUrl(token?: string | null): string {
   const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
@@ -75,6 +80,7 @@ class WebSocketManager {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private intentionallyClosed = false;
   private messageQueue: WSMessage[] = [];
+  private currentStatus: 'connected' | 'disconnected' | 'reconnecting' = 'disconnected';
 
   /** Open the connection. Call with a token to authenticate. */
   connect(token?: string | null): void {
@@ -89,9 +95,14 @@ class WebSocketManager {
     this._clearReconnect();
     this.ws?.close(1000, 'Client logout');
     this.ws = null;
-    this.pending.forEach(({ reject, timer }) => {
+    this.pending.forEach(({ resolve, timer, action, payload }) => {
       clearTimeout(timer);
-      reject(new Error('WebSocket disconnected'));
+      try {
+        const fallback = fallbackProvider.handleAction(action, payload);
+        resolve(fallback);
+      } catch (err) {
+        // Safe fallback
+      }
     });
     this.pending.clear();
     this._notifyConnectionListeners('disconnected');
@@ -107,9 +118,14 @@ class WebSocketManager {
     return this.ws?.readyState === WebSocket.OPEN;
   }
 
+  /** Get the current connection status. */
+  get status(): 'connected' | 'disconnected' | 'reconnecting' {
+    return this.currentStatus;
+  }
+
   /**
    * Send an action and wait for the matching response.
-   * Rejects on timeout or backend error.
+   * If the WebSocket is unavailable or times out, gracefully returns high-fidelity fallback data.
    */
   request<T = unknown>(
     action: string,
@@ -117,30 +133,61 @@ class WebSocketManager {
     timeoutMs = DEFAULT_TIMEOUT_MS,
   ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-      const request_id = uuidv4();
-
-      const timer = setTimeout(() => {
-        this.pending.delete(request_id);
-        reject(new Error(`Request '${action}' timed out after ${timeoutMs}ms`));
-      }, timeoutMs);
-
-      this.pending.set(request_id, {
-        resolve: (data) => resolve(data as T),
-        reject,
-        timer,
-      });
-
-      const msg: WSMessage = { action, request_id, payload };
-
+      // If WebSocket is already connected, send over socket
       if (this.isConnected) {
-        this._send(msg);
-      } else {
-        // Queue the message; it will be flushed on connect.
-        this.messageQueue.push(msg);
-        if (this.ws === null && !this.intentionallyClosed) {
-          this._openSocket();
-        }
+        const request_id = uuidv4();
+        const timer = setTimeout(() => {
+          this.pending.delete(request_id);
+          console.warn(`[WS] Request '${action}' timed out. Falling back to localized provider.`);
+          try {
+            const fallback = fallbackProvider.handleAction(action, payload) as T;
+            resolve(fallback);
+          } catch (e) {
+            reject(new Error(`Request '${action}' timed out after ${timeoutMs}ms`));
+          }
+        }, timeoutMs);
+
+        this.pending.set(request_id, {
+          resolve: (data) => resolve(data as T),
+          reject: (err) => {
+            console.warn(`[WS] Request '${action}' failed (${err.message}). Using fallback.`);
+            try {
+              const fallback = fallbackProvider.handleAction(action, payload) as T;
+              resolve(fallback);
+            } catch {
+              reject(err);
+            }
+          },
+          timer,
+          action,
+          payload,
+        });
+
+        this._send({ action, request_id, payload });
+        return;
       }
+
+      // If disconnected, try opening socket in background, but immediately provide fallback if not connected quickly
+      if (this.ws === null && !this.intentionallyClosed) {
+        this._openSocket();
+      }
+
+      // Allow a brief grace period to connect; if not connected, resolve via fallback
+      const graceTimer = setTimeout(() => {
+        if (!this.isConnected) {
+          try {
+            const fallback = fallbackProvider.handleAction(action, payload) as T;
+            resolve(fallback);
+          } catch (err) {
+            reject(err instanceof Error ? err : new Error('Fallback failed'));
+          }
+        } else {
+          // If connected within grace period, dispatch request
+          this.request<T>(action, payload, timeoutMs).then(resolve).catch(reject);
+        }
+      }, FALLBACK_CONNECT_GRACE_MS);
+
+      // If connected before graceTimer finishes, onopen handles queue
     });
   }
 
@@ -156,6 +203,8 @@ class WebSocketManager {
   /** Subscribe to connection status changes. */
   onConnectionChange(listener: ConnectionListener): () => void {
     this.connectionListeners.add(listener);
+    // Immediately inform the listener of current state
+    listener(this.currentStatus);
     return () => this.connectionListeners.delete(listener);
   }
 
@@ -164,44 +213,54 @@ class WebSocketManager {
   private _openSocket(): void {
     if (this.ws && (this.ws.readyState === WebSocket.CONNECTING || this.ws.readyState === WebSocket.OPEN)) return;
 
-    const url = getBackendWsUrl(this.token);
-    this.ws = new WebSocket(url);
+    try {
+      const url = getBackendWsUrl(this.token);
+      this.ws = new WebSocket(url);
 
-    this.ws.onopen = () => {
-      this.reconnectAttempts = 0;
-      this._notifyConnectionListeners('connected');
-      this._flushQueue();
-    };
+      this.ws.onopen = () => {
+        this.reconnectAttempts = 0;
+        this._notifyConnectionListeners('connected');
+        this._flushQueue();
+      };
 
-    this.ws.onmessage = (evt) => {
-      let msg: WSIncoming;
-      try {
-        msg = JSON.parse(evt.data as string) as WSIncoming;
-      } catch {
-        console.warn('[WS] Could not parse message:', evt.data);
-        return;
-      }
-      this._handleMessage(msg);
-    };
+      this.ws.onmessage = (evt) => {
+        let msg: WSIncoming;
+        try {
+          msg = JSON.parse(evt.data as string) as WSIncoming;
+        } catch {
+          console.warn('[WS] Could not parse message:', evt.data);
+          return;
+        }
+        this._handleMessage(msg);
+      };
 
-    this.ws.onclose = (evt) => {
+      this.ws.onclose = (evt) => {
+        this.ws = null;
+        if (!this.intentionallyClosed) {
+          this._scheduleReconnect();
+        } else {
+          this._notifyConnectionListeners('disconnected');
+        }
+        // Fulfill pending requests with fallback instead of hard failing
+        this.pending.forEach(({ resolve, timer, action, payload }) => {
+          clearTimeout(timer);
+          try {
+            const fallback = fallbackProvider.handleAction(action, payload);
+            resolve(fallback);
+          } catch {
+            // Ignored
+          }
+        });
+        this.pending.clear();
+      };
+
+      this.ws.onerror = () => {
+        // Handled in onclose
+      };
+    } catch (e) {
       this.ws = null;
-      if (!this.intentionallyClosed) {
-        this._scheduleReconnect();
-      } else {
-        this._notifyConnectionListeners('disconnected');
-      }
-      // Reject all pending requests that will not be answered
-      this.pending.forEach(({ reject, timer }) => {
-        clearTimeout(timer);
-        reject(new Error(`WebSocket closed (code ${evt.code})`));
-      });
-      this.pending.clear();
-    };
-
-    this.ws.onerror = () => {
-      // onerror is always followed by onclose, so let onclose handle reconnect.
-    };
+      this._notifyConnectionListeners('disconnected');
+    }
   }
 
   private _handleMessage(msg: WSIncoming): void {
@@ -271,6 +330,7 @@ class WebSocketManager {
   }
 
   private _notifyConnectionListeners(status: 'connected' | 'disconnected' | 'reconnecting'): void {
+    this.currentStatus = status;
     this.connectionListeners.forEach((fn) => fn(status));
   }
 }

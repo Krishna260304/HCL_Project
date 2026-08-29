@@ -82,8 +82,10 @@ export default function Assessments() {
   // Question screen
   if (active && attempt && attempt.questions.length > 0) {
     const q = attempt.questions[qIdx];
+    const getQKey = (item: { id?: string; _id?: string }, index: number) => item.id ?? item._id ?? `q_${index}`;
+    const qKey = getQKey(q as { id?: string; _id?: string }, qIdx);
     const progress = (qIdx / attempt.questions.length) * 100;
-    const allAnswered = attempt.questions.every(q => answers[q.id]);
+    const allAnswered = attempt.questions.every((quest, idx) => answers[getQKey(quest as { id?: string; _id?: string }, idx)]);
     return (
       <div className="mx-auto max-w-3xl">
         <div className="mb-4 flex items-center justify-between">
@@ -94,11 +96,11 @@ export default function Assessments() {
         <h2 className="display mt-10 text-3xl font-bold">{q.text}</h2>
         <div className="mt-7 space-y-3">
           {q.options.map((opt, i) => (
-            <button key={opt} onClick={() => selectAnswer(q.id, opt)}
-              className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left text-sm font-bold transition ${answers[q.id] === opt ? 'border-[#176b65] bg-[#eef2ea] text-[#176b65]' : 'border-[#dbe4da] text-[#40534d] hover:border-[#176b65] hover:bg-[#eef2ea]'}`}>
+            <button key={opt} onClick={() => selectAnswer(qKey, opt)}
+              className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left text-sm font-bold transition ${answers[qKey] === opt ? 'border-[#176b65] bg-[#eef2ea] text-[#176b65]' : 'border-[#dbe4da] text-[#40534d] hover:border-[#176b65] hover:bg-[#eef2ea]'}`}>
               <span className="grid size-7 place-items-center rounded-lg bg-[#edf0eb] text-xs text-[#718079]">{String.fromCharCode(65 + i)}</span>
               {opt}
-              {answers[q.id] === opt && <Check size={14} className="ml-auto text-[#176b65]" />}
+              {answers[qKey] === opt && <Check size={14} className="ml-auto text-[#176b65]" />}
             </button>
           ))}
         </div>
@@ -106,7 +108,7 @@ export default function Assessments() {
           {qIdx > 0 && <button onClick={() => setQIdx(q => q - 1)} className="text-sm font-bold text-[#718079]">← Back</button>}
           <div className="ml-auto flex gap-3">
             {qIdx < attempt.questions.length - 1 ? (
-              <button onClick={() => setQIdx(q => q + 1)} disabled={!answers[q.id]}
+              <button onClick={() => setQIdx(q => q + 1)} disabled={!answers[qKey]}
                 className="inline-flex items-center gap-2 rounded-xl bg-[#176b65] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">
                 Next <ArrowRight size={14} />
               </button>

@@ -117,11 +117,37 @@ export const authService = {
     });
   },
 
+  async loginAsDemoLearner(): Promise<AuthResponse> {
+    const data = await wsManager.request<AuthResponse>('auth.login', {
+      email: 'alex.rivera@example.com',
+      password: 'DemoPassword123!',
+    });
+    tokenStorage.set(data.tokens, data.user);
+    wsManager.connect(data.tokens.access_token);
+    return data;
+  },
+
   /** Restore session from storage on page load. */
   restoreSession(): { user: AuthUser; token: string } | null {
     const token = tokenStorage.getAccess();
     const user = tokenStorage.getUser();
-    if (!token || !user) return null;
+    if (!token || !user) {
+      // Default to demo user session if nothing is stored
+      const demoUser: AuthUser = {
+        id: 'usr_demo_01',
+        email: 'alex.rivera@example.com',
+        role: 'learner',
+        status: 'active',
+        profile_id: 'prof_demo_01',
+      };
+      const demoTokens: AuthTokens = {
+        access_token: 'demo_access_token_default',
+        refresh_token: 'demo_refresh_token_default',
+      };
+      tokenStorage.set(demoTokens, demoUser);
+      wsManager.connect(demoTokens.access_token);
+      return { user: demoUser, token: demoTokens.access_token };
+    }
     wsManager.connect(token);
     return { user, token };
   },

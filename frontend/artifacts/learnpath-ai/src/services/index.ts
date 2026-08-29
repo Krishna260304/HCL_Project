@@ -182,6 +182,7 @@ export interface Project {
   estimated_time?: string;
   status?: string;
   reason?: string;
+  phase_order?: number;
 }
 
 export const projectService = {
@@ -202,6 +203,8 @@ export interface Assessment {
   topic?: string;
   skill?: string;
   difficulty?: string;
+  description?: string;
+  skill_ids?: string[];
   questions_count?: number;
   average_score?: number;
   status?: string;
@@ -384,6 +387,16 @@ export const recommendationService = {
 
 // ─── Progress types ───────────────────────────────────────────────────────────
 
+export interface ProgressActivityItem {
+  day?: string;
+  title?: string;
+  duration?: string;
+  completed?: boolean;
+  action?: string;
+  item_id?: string;
+  timestamp?: string;
+}
+
 export interface ProgressData {
   total_hours?: number;
   learning_streak?: number;
@@ -394,7 +407,7 @@ export interface ProgressData {
   current_phase?: string | null;
   weekly_data?: Array<{ week: string; hours: number; score: number; progress: number }>;
   skill_progress?: Array<{ name: string; self: number; verified: number; required: number }>;
-  activity?: Array<{ day: string; title: string; duration: string; completed: boolean }>;
+  activity?: ProgressActivityItem[];
   average_score?: number;
 }
 
@@ -413,6 +426,38 @@ export const progressService = {
 
   async getActivity(): Promise<ProgressData['activity']> {
     return wsManager.request<ProgressData['activity']>('progress.activity', {});
+  },
+};
+
+// ─── Course types ─────────────────────────────────────────────────────────────
+
+export interface Course {
+  id: string;
+  title: string;
+  provider?: string;
+  skills?: string[];
+  duration?: string;
+  level?: string;
+  url?: string;
+}
+
+export const courseService = {
+  async listCourses(payload: Record<string, unknown> = {}): Promise<Course[]> {
+    return wsManager.request<Course[]>('course.list', payload);
+  },
+  async getCourse(courseId: string): Promise<Course> {
+    return wsManager.request<Course>('course.get', { course_id: courseId });
+  },
+};
+
+// ─── User service ─────────────────────────────────────────────────────────────
+
+export const userService = {
+  async getSelf(): Promise<Record<string, unknown>> {
+    return wsManager.request('user.get_self', {});
+  },
+  async updatePreferences(preferences: Record<string, unknown>): Promise<Record<string, unknown>> {
+    return wsManager.request('user.update_preferences', { preferences });
   },
 };
 
