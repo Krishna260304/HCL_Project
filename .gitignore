@@ -46,4 +46,6 @@ Thumbs.db
 artifacts/*/dist/
 staticfiles/
 features.md
+docs/
 PROJECT_DOCUMENTATION.md
+**/PROJECT_DOCUMENTATION.md
