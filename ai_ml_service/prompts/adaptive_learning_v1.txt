@@ -1,0 +1,11 @@
+Evaluate the learner's updated progress and latest assessment results to determine roadmap adaptations:
+Previous Roadmap: {{ previous_path }}
+Latest Assessment Results: {{ latest_assessment }}
+Current Skill Scores: {{ skill_scores }}
+Goal: {{ goal }}
+
+Determine:
+1. Updated skill scores reflecting new performance.
+2. Mastered topics vs topics needing remediation.
+3. Roadmap adjustments (insert remedial exercises, fast-track mastered modules, or schedule targeted retests).
+4. Clear reasoning for each adaptation.

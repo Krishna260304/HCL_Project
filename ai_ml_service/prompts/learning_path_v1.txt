@@ -1,0 +1,12 @@
+Design a comprehensive, sequential, multi-phase personalized learning roadmap for the learner:
+Goal: {{ goal }}
+Verified Skills: {{ verified_skills }}
+Skill Gaps: {{ skill_gaps }}
+Available Resources: {{ resources }}
+Timeline: {{ timeline }}
+Preferences: {{ preferences }}
+
+Construct:
+- Multi-phase structured progression (e.g. Foundations -> Core Mastery -> Applied Projects -> Advanced Deployment).
+- Phase title, objective, prerequisite checks, assigned resources, hands-on project deliverables, milestone criteria, and duration.
+Ensure NO circular dependencies and strict prerequisite validation.

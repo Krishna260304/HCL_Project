@@ -1,0 +1,11 @@
+Generate a concise, motivating, natural language explanation for why this resource is recommended to the learner.
+CRITICAL: Use ONLY the provided evidence. Do NOT hallucinate course features not listed.
+
+Resource Title: {{ resource.title }}
+Resource Skills: {{ resource.skills | join(', ') }}
+Resource Difficulty: {{ resource.difficulty }}
+Learner Goal: {{ goal }}
+Matched Skill Gap: {{ evidence.matched_skills | join(', ') }}
+Skill Gap Score Before: {{ evidence.skill_gap_match }}
+
+Explain why this resource directly advances the learner's path:

@@ -395,15 +395,15 @@ export default function OnboardingSkills() {
   const [stage, setStage] = useState<number>(0);
 
   // Background & Goal
-  const [education, setEducation] = useState(educationOptions[0]);
-  const [currentStatus, setCurrentStatus] = useState(statusOptions[0]);
+  const [education, setEducation] = useState('');
+  const [currentStatus, setCurrentStatus] = useState('');
   const [currentRole, setCurrentRole] = useState('');
-  const [experienceLevel, setExperienceLevel] = useState('intermediate');
+  const [experienceLevel, setExperienceLevel] = useState('');
 
-  const [objective, setObjective] = useState(primaryObjectives[0]);
-  const [targetRole, setTargetRole] = useState(targetDestinations[0]);
+  const [objective, setObjective] = useState('');
+  const [targetRole, setTargetRole] = useState('');
   const [customGoalText, setCustomGoalText] = useState('');
-  const [timeline, setTimeline] = useState(timelineOptions[1]);
+  const [timeline, setTimeline] = useState('');
   const [analyzingGoal, setAnalyzingGoal] = useState(false);
   const [aiGoalInsights, setAiGoalInsights] = useState<{
     target_role?: string;
@@ -411,19 +411,17 @@ export default function OnboardingSkills() {
     summary?: string;
   } | null>(null);
 
-  // Skills (Step 2)
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([
-    'Python', 'Machine learning', 'Deep learning', 'SQL', 'Git'
-  ]);
+  // Skills (Step 2) - Starts completely clean without default pre-selections
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
   // Time & Rhythm (Step 3)
   const [dailyTime, setDailyTime] = useState(2);
   const [learningStyle, setLearningStyle] = useState('project-based');
   const [learningPace, setLearningPace] = useState('balanced');
 
-  // Practical & Constraints (Step 4)
-  const [practicalExperience, setPracticalExperience] = useState(practicalExperiences[3]);
-  const [selectedConstraints, setSelectedConstraints] = useState<string[]>(['Prefer 100% free learning resources']);
+  // Practical & Constraints (Step 4) - Starts clean without pre-selections
+  const [practicalExperience, setPracticalExperience] = useState('');
+  const [selectedConstraints, setSelectedConstraints] = useState<string[]>([]);
 
   // Diagnostic Mock Exam (Step 5 & 6)
   const [generatingExam, setGeneratingExam] = useState(false);
@@ -902,6 +900,32 @@ export default function OnboardingSkills() {
                 </div>
               </div>
 
+              {/* Education & Current Status */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#40534d]">Education Background</label>
+                  <select
+                    value={education}
+                    onChange={(e) => setEducation(e.target.value)}
+                    className="mt-2 w-full rounded-xl border border-[#d2ded2] bg-white p-3 text-xs font-bold text-[#354740] outline-none focus:border-[#176b65]"
+                  >
+                    <option value="" disabled>Select your education</option>
+                    {educationOptions.map(ed => <option key={ed} value={ed}>{ed}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#40534d]">Current Status</label>
+                  <select
+                    value={currentStatus}
+                    onChange={(e) => setCurrentStatus(e.target.value)}
+                    className="mt-2 w-full rounded-xl border border-[#d2ded2] bg-white p-3 text-xs font-bold text-[#354740] outline-none focus:border-[#176b65]"
+                  >
+                    <option value="" disabled>Select your current status</option>
+                    {statusOptions.map(st => <option key={st} value={st}>{st}</option>)}
+                  </select>
+                </div>
+              </div>
+
               {/* Primary Objective & Timeline */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -911,6 +935,7 @@ export default function OnboardingSkills() {
                     onChange={(e) => setObjective(e.target.value)}
                     className="mt-2 w-full rounded-xl border border-[#d2ded2] bg-white p-3 text-xs font-bold text-[#354740] outline-none focus:border-[#176b65]"
                   >
+                    <option value="" disabled>Select your primary objective</option>
                     {primaryObjectives.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
@@ -921,6 +946,7 @@ export default function OnboardingSkills() {
                     onChange={(e) => setTimeline(e.target.value)}
                     className="mt-2 w-full rounded-xl border border-[#d2ded2] bg-white p-3 text-xs font-bold text-[#354740] outline-none focus:border-[#176b65]"
                   >
+                    <option value="" disabled>Select target timeline</option>
                     {timelineOptions.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
@@ -930,8 +956,16 @@ export default function OnboardingSkills() {
             <div className="mt-10 flex justify-end">
               <button
                 type="button"
-                onClick={() => setStage(1)}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#176b65] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#115a55]"
+                disabled={!targetRole && !customGoalText.trim()}
+                onClick={() => {
+                  if (!targetRole && !customGoalText.trim()) {
+                    setErrorMsg('Please select or specify your target destination.');
+                    return;
+                  }
+                  setErrorMsg(null);
+                  setStage(1);
+                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#176b65] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#115a55] disabled:opacity-40"
               >
                 Continue to CS Skills Selection <ArrowRight size={16} />
               </button>
@@ -1123,8 +1157,9 @@ export default function OnboardingSkills() {
               </button>
               <button
                 type="button"
+                disabled={!practicalExperience}
                 onClick={handleProceedToDiagnostic}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#176b65] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#115a55]"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#176b65] px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#115a55] disabled:opacity-40"
               >
                 Generate Diagnostic Assessment <ArrowRight size={16} />
               </button>

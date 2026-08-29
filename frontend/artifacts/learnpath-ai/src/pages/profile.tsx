@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { profileService, userService, type LearnerProfile } from '@/services/index';
+import { profileService, type LearnerProfile } from '@/services/index';
 import { Check, Clock3, Bell, Sparkles, ShieldCheck, UserRound, ArrowRight, Loader2 } from 'lucide-react';
 import { SkeletonCard, ErrorState } from '@/components/states';
 

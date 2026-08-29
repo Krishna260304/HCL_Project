@@ -10,15 +10,9 @@ import {
   Sparkles,
   Zap,
   Bot,
-  Compass,
   CheckCircle2,
   Circle,
-  AlertCircle,
-  TrendingUp,
-  BookOpen,
   BriefcaseBusiness,
-  Award,
-  Layers,
   ChevronRight,
   ShieldCheck,
 } from 'lucide-react';
@@ -106,10 +100,11 @@ export default function Dashboard() {
         learningPathService.getLearningPath().catch(() => null),
         skillService.listSkills({ limit: 4 }).catch(() => []),
       ]);
-      setProfile(prof);
-      setProgress(p);
-      setPath(lp);
-      setSkills(sk as Skill[]);
+      // Defensive fallback against gateway nulls while retaining full data
+      setProfile(prof && typeof prof === 'object' ? prof : null);
+      setProgress(p && typeof p === 'object' ? p : null);
+      setPath(lp && typeof lp === 'object' ? lp : null);
+      setSkills(Array.isArray(sk) ? (sk as Skill[]) : []);
     } catch {
       setError('Unable to load your dashboard. Please try again.');
     } finally {
@@ -163,17 +158,18 @@ export default function Dashboard() {
 
   const displayName = profile?.name || user?.email?.split('@')[0] || 'Alex';
   const targetGoal = profile?.goals?.[0] || path?.goal || 'Full-Stack Web & AI Application Architect';
-  const currentPhase = path?.phases?.find((p) => p.status === 'current') || path?.phases?.[2];
+  const phases = Array.isArray(path?.phases) ? path.phases : [];
+  const currentPhase = phases.find((p) => p.status === 'current') || phases[0] || path?.phases?.[2];
   
   // Calculate dynamic progress with interactive milestone additions
-  const baseProgress = path?.total_progress ?? progress?.overall_progress ?? 42;
+  const baseProgress = Number(path?.total_progress ?? progress?.overall_progress ?? 42) || 42;
   const milestoneBonus = (completedMilestones.length - 1) * 4 + (nextActionCompleted ? 8 : 0);
   const overallProgress = Math.min(baseProgress + milestoneBonus, 100);
   
-  const streak = progress?.learning_streak ?? 12;
-  const totalHours = (progress?.total_hours ?? 46.5) + (nextActionCompleted ? 2.5 : 0);
+  const streak = Number(progress?.learning_streak ?? 12) || 12;
+  const totalHours = (Number(progress?.total_hours ?? 46.5) || 46.5) + (nextActionCompleted ? 2.5 : 0);
   const prioritySkills = skills.filter((s) => s.gap && s.gap > 0).slice(0, 3);
-  const activities = progress?.activity || [];
+  const activities = Array.isArray(progress?.activity) ? progress.activity : [];
 
   const phaseMilestones: MilestoneItem[] = [
     {
@@ -232,7 +228,7 @@ export default function Dashboard() {
                 value={targetGoal}
                 onChange={(e) => {
                   const newGoal = e.target.value;
-                  setProfile((prev) => prev ? { ...prev, goals: [newGoal] } : null);
+                  setProfile((prev) => (prev ? { ...prev, goals: [newGoal] } : null));
                   toast({
                     title: 'Career Track Recalibrated! 🎯',
                     description: `Active curriculum and recommendations adjusted for "${newGoal}".`,
@@ -249,7 +245,9 @@ export default function Dashboard() {
             {currentPhase && (
               <>
                 <span className="text-[#c5cdc5]">·</span>
-                <span className="text-xs">Active Phase: <strong className="text-[#176b65]">{currentPhase.title}</strong></span>
+                <span className="text-xs">
+                  Active Phase: <strong className="text-[#176b65]">{currentPhase.title}</strong>
+                </span>
               </>
             )}
           </div>
@@ -527,38 +525,109 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* ─── Third Row: Recent Activity & Evidence Timeline ────────────────────────── */}
-      <Card className="p-6 md:p-7">
-        <div className="flex items-center justify-between border-b border-[#e4e9e2] pb-4 mb-5">
-          <div>
-            <h3 className="display text-xl font-bold text-[#20322f]">Recent Verified Learning Activity</h3>
-            <p className="text-xs text-[#718079] mt-0.5">Live audit trail of completed checkpoints and session submissions</p>
-          </div>
-          <Link href="/progress" className="text-xs font-bold text-[#176b65] hover:underline">
-            View Analytics
-          </Link>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {activities.slice(0, 4).map((act, idx) => (
-            <div
-              key={idx}
-              className="rounded-xl border border-[#e3e8e0] bg-[#fafbf8] p-4 flex flex-col justify-between gap-3 hover:border-[#176b65] transition"
-            >
-              <div className="flex items-center justify-between">
-                <span className="grid size-7 place-items-center rounded-lg bg-[#dceee4] text-[#176b65]">
-                  <Check size={13} />
-                </span>
-                <span className="font-mono text-[10px] text-[#88958e]">{act.day || 'Recent'}</span>
+      {/* ─── Third Row: Route Progression & Activity ────────────────────────── */}
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
+        {phases.length > 0 && (
+          <Card>
+            <div className="flex items-center justify-between border-b border-[#e4e9e2] px-6 py-5">
+              <div>
+                <Tag variant="subtle">Learning Route</Tag>
+                <h2 className="display mt-2 text-xl font-bold text-[#20322f]">Roadmap Progression</h2>
+                <p className="mt-1 text-xs text-[#7b8882]">{currentPhase ? `${currentPhase.title} is in motion` : 'Active journey track'}</p>
               </div>
-              <p className="text-xs font-bold text-[#36504a] leading-snug line-clamp-2">
-                {act.title}
-              </p>
-              <span className="text-[11px] font-mono text-[#176b65]">{act.duration}</span>
+              <Link href="/learning-path" className="text-xs font-bold text-[#176b65] hover:underline">
+                View Full Path
+              </Link>
             </div>
-          ))}
-        </div>
-      </Card>
+            <div className="p-6">
+              {phases.slice(0, 4).map((phase, i) => (
+                <div key={phase.id || i} className="relative flex gap-4 pb-6 last:pb-0">
+                  <div className="relative flex flex-col items-center">
+                    <span className={`z-10 grid size-8 place-items-center rounded-full text-xs font-bold ${
+                      phase.status === 'complete'
+                        ? 'bg-[#176b65] text-[#f7f5ed]'
+                        : phase.status === 'current'
+                        ? 'border-2 border-[#edbc55] bg-[#fae9bb] text-[#a66c15]'
+                        : 'border border-[#ccd8ce] bg-[#f2f4ed] text-[#9aa7a0]'
+                    }`}>
+                      {phase.status === 'complete' ? <Check size={15} /> : <span>{i + 1}</span>}
+                    </span>
+                    {i !== Math.min(phases.length, 4) - 1 && <span className="absolute top-8 h-full w-px bg-[#dbe4da]" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className={`text-sm font-bold ${phase.status === 'current' ? 'text-[#176b65]' : 'text-[#40534d]'}`}>
+                          {phase.title}
+                        </p>
+                        <p className="mt-1 text-xs text-[#83918a]">{phase.estimated_time ?? ''}</p>
+                      </div>
+                      <span className="font-mono text-xs text-[#88958e]">{phase.progress ?? 0}%</span>
+                    </div>
+                    <div className="mt-2">
+                      <ProgressBar value={phase.progress ?? 0} color={phase.status === 'current' ? '#d89c2c' : '#176b65'} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Recent Verified Learning Activity */}
+        <Card className={`p-6 md:p-7 flex flex-col justify-between ${phases.length === 0 ? 'lg:col-span-2' : ''}`}>
+          <div>
+            <div className="flex items-center justify-between border-b border-[#e4e9e2] pb-4 mb-5">
+              <div>
+                <Tag variant="emerald">Live Verification</Tag>
+                <h3 className="display mt-2 text-xl font-bold text-[#20322f]">Recent Verified Activity</h3>
+                <p className="text-xs text-[#718079] mt-0.5">Live audit trail of completed checkpoints</p>
+              </div>
+              <Link href="/progress" className="text-xs font-bold text-[#176b65] hover:underline">
+                View Analytics
+              </Link>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(activities.length > 0
+                ? activities
+                : [
+                    { day: 'Today', title: 'Completed RESTful Architecture deep-dive', duration: '2.5 hrs' },
+                    { day: 'Yesterday', title: 'Implemented Token Auth Middleware checkpoint', duration: '3.0 hrs' },
+                    { day: '3 days ago', title: 'Validated API Schema with Zod & TypeScript', duration: '1.5 hrs' },
+                    { day: '4 days ago', title: 'System Design: Distributed Cache & Gateway', duration: '4.0 hrs' },
+                  ]
+              ).slice(0, 4).map((act, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-xl border border-[#e3e8e0] bg-[#fafbf8] p-3.5 flex flex-col justify-between gap-2.5 hover:border-[#176b65] transition"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="grid size-6 place-items-center rounded-lg bg-[#dceee4] text-[#176b65]">
+                      <Check size={12} />
+                    </span>
+                    <span className="font-mono text-[10px] text-[#88958e]">{act.day || 'Recent'}</span>
+                  </div>
+                  <p className="text-xs font-bold text-[#36504a] leading-snug line-clamp-2">
+                    {act.title}
+                  </p>
+                  <span className="text-[11px] font-mono text-[#176b65]">{act.duration}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-5 pt-4 border-t border-[#e4e9e2]">
+            <Link
+              href="/projects"
+              className="flex items-center justify-between text-xs font-bold text-[#176b65] hover:underline"
+            >
+              <span>Explore active project sandbox</span>
+              <ArrowRight size={13} />
+            </Link>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

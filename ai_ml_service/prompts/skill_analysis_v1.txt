@@ -1,0 +1,12 @@
+Analyze the learner's demonstrated competencies based on the following evidence:
+Self-Reported Skills: {{ self_reported_skills }}
+Assessment Results: {{ assessment_results }}
+Learning History: {{ learning_history }}
+Goal: {{ goal }}
+
+Compute:
+1. Verified skill scores (0.0 to 1.0) strictly based on assessment performance.
+2. Estimated skill levels.
+3. Identified validated strengths and weaknesses.
+4. Specific skill gaps against the target goal.
+5. Immediate recommended next skills.

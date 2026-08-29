@@ -1,0 +1,13 @@
+Extract structured educational metadata from this learning resource:
+Title: {{ title }}
+Description: {{ description }}
+Source: {{ source }}
+URL: {{ url }}
+
+Determine:
+1. Relevant skills and granular topics
+2. Difficulty tier (beginner, intermediate, advanced)
+3. Prerequisite competencies
+4. Estimated completion duration in minutes
+5. Learning format (video, article, course, documentation, project, exercise)
+6. Quality score (0.0 to 1.0) and summary

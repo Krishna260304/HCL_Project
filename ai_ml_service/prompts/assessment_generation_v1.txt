@@ -1,0 +1,15 @@
+You are an expert technical psychometrician and educator.
+Generate a rigorous diagnostic multiple-choice assessment for:
+
+Goal: {{ goal }}
+Experience Level: {{ experience_level }}
+Target Skills: {{ skills | join(', ') }}
+Knowledge Areas: {{ knowledge_areas | join(', ') }}
+Number of Questions: {{ num_questions }}
+
+For EACH question:
+- Question stem MUST be precise and clear.
+- Exactly 4 distinct options (no duplicate options).
+- Exactly 1 unambiguous correct answer matching one of the options verbatim.
+- Detailed explanation justifying why the correct answer is right and why others are wrong.
+- Associated skill, topic, difficulty (beginner, intermediate, advanced), and learning objective.
