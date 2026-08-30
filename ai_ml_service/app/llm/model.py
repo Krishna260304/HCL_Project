@@ -66,7 +66,7 @@ class LLMProvider(ABC):
 class LocalTransformersProvider(LLMProvider):
     """
     Local PyTorch/Transformers inference provider optimized for 8GB VRAM RTX GPUs.
-    Applies 4-bit NF4 quantization, auto device map, and provides graceful CPU fallback.
+    Applies 4-bit NF4 quantization and keeps inference on the configured CUDA device.
     """
 
     def __init__(self, settings: Settings):
@@ -121,8 +121,7 @@ class LocalTransformersProvider(LLMProvider):
             load_kwargs["torch_dtype"] = torch.float16
             load_kwargs["device_map"] = self.settings.LLM_DEVICE_MAP
         else:
-            logger.info("CUDA not available. Loading LLM on CPU in float32")
-            load_kwargs["torch_dtype"] = torch.float32
+            raise RuntimeError("CUDA is required for the local Transformers LLM; CPU fallback is disabled.")
 
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_name,

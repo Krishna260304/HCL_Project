@@ -367,7 +367,7 @@ function LearningModule() {
                   <td className="px-4 py-3.5"><p className="font-bold">{c.title}</p><p className="mt-0.5 text-[10px] text-[#83918a]">Updated {c.updated}</p></td>
                   <td className="px-4 py-3.5 text-[#53665f]">{c.category}</td>
                   <td className="px-4 py-3.5"><Badge blue={c.difficulty === 'Advanced'} green={c.difficulty === 'Beginner'} yellow={c.difficulty === 'Intermediate'}>{c.difficulty}</Badge></td>
-                  <td className="px-4 py-3.5"><div className="flex flex-wrap gap-1">{c.skills.map(s => <Badge key={s}>{s}</Badge>)}</div></td>
+                  <td className="px-4 py-3.5"><div className="flex flex-wrap gap-1">{c.skills.map((s: string) => <Badge key={s}>{s}</Badge>)}</div></td>
                   <td className="px-4 py-3.5 text-xs text-[#718079]">{c.duration}</td>
                   <td className="px-4 py-3.5 font-mono text-xs">{c.resources}</td>
                   <td className="px-4 py-3.5"><Badge green={c.status === 'Published'} yellow={c.status === 'Draft'}>{c.status}</Badge></td>
@@ -448,7 +448,7 @@ function SkillsModule() {
                   <td className="px-4 py-3.5 text-[#53665f]">{s.category}</td>
                   <td className="px-4 py-3.5"><Badge blue={s.difficulty === 'Advanced'} green={s.difficulty === 'Beginner'} yellow={s.difficulty === 'Intermediate'}>{s.difficulty}</Badge></td>
                   <td className="px-4 py-3.5 font-mono text-xs">{s.learners.toLocaleString()}</td>
-                  <td className="px-4 py-3.5"><div className="flex flex-wrap gap-1">{s.related.map(r => <Badge key={r}>{r}</Badge>)}</div></td>
+                  <td className="px-4 py-3.5"><div className="flex flex-wrap gap-1">{s.related.map((r: string) => <Badge key={r}>{r}</Badge>)}</div></td>
                   <td className="px-4 py-3.5"><Badge green={s.status === 'Active'} red={s.status === 'Disabled'}>{s.status}</Badge></td>
                   <td className="px-4 py-3.5"><div className="flex gap-2"><Btn small outline>Edit</Btn><button onClick={() => toggleSkill(s.name)} className="rounded-lg p-1.5 text-[#83918a] hover:text-[#1f312e]">{s.status === 'Active' ? <ToggleRight size={16} className="text-[#176b65]" /> : <ToggleLeft size={16} />}</button></div></td>
                 </tr>

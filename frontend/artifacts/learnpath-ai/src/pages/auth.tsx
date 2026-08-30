@@ -48,10 +48,25 @@ export default function AuthPage({ register = false }: { register?: boolean }) {
         if (!name.trim()) {
           throw new Error('Please enter your full name.');
         }
+        if (!currentRole.trim()) {
+          throw new Error('Please enter your current role.');
+        }
+        if (!experience) {
+          throw new Error('Please select your experience level.');
+        }
+        if (!goal.trim()) {
+          throw new Error('Please enter your target career role.');
+        }
+        const experienceLevel = experience === 'beginner'
+          ? 'beginner'
+          : experience.startsWith('intermediate') ? 'intermediate' : 'advanced';
         const authUser = await registerUser({
           email: email.trim(),
           password,
           name: name.trim(),
+          current_role: currentRole.trim(),
+          experience_level: experienceLevel,
+          target_outcome: goal.trim(),
         });
         if (authUser.role === 'admin') {
           setLocation('/admin/dashboard');
@@ -128,7 +143,7 @@ export default function AuthPage({ register = false }: { register?: boolean }) {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  placeholder="e.g. Maya Chen"
+                  placeholder="Enter your full name"
                   className="mt-2 w-full rounded-xl border border-[#ccd8ce] bg-[#fbfaf5] px-4 py-3.5 text-sm outline-none focus:border-[#176b65] focus:ring-2 focus:ring-[#176b65]/10"
                   data-testid="input-name"
                 />
@@ -142,7 +157,7 @@ export default function AuthPage({ register = false }: { register?: boolean }) {
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
                 required
-                placeholder="you@example.com"
+                placeholder="Enter your email address"
                 className="mt-2 w-full rounded-xl border border-[#ccd8ce] bg-[#fbfaf5] px-4 py-3.5 text-sm outline-none focus:border-[#176b65] focus:ring-2 focus:ring-[#176b65]/10"
                 data-testid="input-email"
               />
@@ -169,7 +184,7 @@ export default function AuthPage({ register = false }: { register?: boolean }) {
                     <input
                       value={currentRole}
                       onChange={(e) => setCurrentRole(e.target.value)}
-                      placeholder="e.g. Student, Developer"
+                      placeholder="Enter your current role"
                       className="mt-2 w-full rounded-xl border border-[#ccd8ce] bg-[#fbfaf5] px-4 py-3 text-sm outline-none focus:border-[#176b65]"
                       data-testid="input-role"
                     />
@@ -179,6 +194,7 @@ export default function AuthPage({ register = false }: { register?: boolean }) {
                     <select
                       value={experience}
                       onChange={(e) => setExperience(e.target.value)}
+                      required
                       className="mt-2 w-full rounded-xl border border-[#ccd8ce] bg-[#fbfaf5] px-3 py-3 text-sm outline-none focus:border-[#176b65]"
                       data-testid="select-experience"
                     >
@@ -196,7 +212,8 @@ export default function AuthPage({ register = false }: { register?: boolean }) {
                   <input
                     value={goal}
                     onChange={(e) => setGoal(e.target.value)}
-                    placeholder="e.g. AI Engineer, Data Scientist, Full-Stack Developer"
+                    required
+                    placeholder="Enter your target career role"
                     className="mt-2 w-full rounded-xl border border-[#ccd8ce] bg-[#fbfaf5] px-4 py-3 text-sm outline-none focus:border-[#176b65]"
                     data-testid="input-registration-goal"
                   />

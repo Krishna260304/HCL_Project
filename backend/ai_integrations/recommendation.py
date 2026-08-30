@@ -8,9 +8,9 @@ class RecommendationClient:
     @classmethod
     def get_recommendations(cls, payload: Dict[str, Any]) -> Dict[str, Any]:
         try:
-            raw_response = BaseAIClient.post(cls.endpoint, payload)
+            raw_response = BaseAIClient.post(cls.endpoint, payload, timeout=60)
             return cls.normalize_response(raw_response, payload)
-        except ExternalAIServiceUnavailableError:
+        except Exception:
             return cls.fallback_response(payload)
 
     @classmethod

@@ -24,7 +24,7 @@ class AssessmentService:
             self_reported_skills=request.self_reported_skills or {},
             learning_history=request.learning_history or [],
             required_skills=request.required_skills or request.skills or [],
-            num_questions=request.num_questions or 5,
+            num_questions=max(5, min(10, request.num_questions or 5)),
         )
         final_state = await self.graph.ainvoke(initial_state)
         out = final_state.get("final_output") if isinstance(final_state, dict) else getattr(final_state, "final_output", None)

@@ -17,7 +17,8 @@ peft>=0.11.0
 trl>=0.9.0
 
 # Vector Search & RAG
-qdrant-client>=1.9.0
+# Keep the client aligned with qdrant/qdrant:v1.9.2 in docker-compose.yml.
+qdrant-client==1.9.2
 
 # Workflows & Graph Orchestration
 langgraph>=0.0.30

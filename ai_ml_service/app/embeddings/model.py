@@ -60,7 +60,11 @@ class BGEM3Provider(EmbeddingProvider):
         from sentence_transformers import SentenceTransformer
 
         logger.info(f"Loading BGE-M3 Embedding model: {self.model_name}")
-        device = "cuda" if torch.cuda.is_available() and self.settings.EMBEDDING_DEVICE == "cuda" else "cpu"
+        if self.settings.EMBEDDING_DEVICE != "cuda":
+            raise RuntimeError("EMBEDDING_DEVICE must be set to 'cuda' for production inference.")
+        if not torch.cuda.is_available():
+            raise RuntimeError("CUDA is unavailable; refusing to load embeddings on CPU.")
+        device = "cuda"
         self.model = SentenceTransformer(self.model_name, device=device)
         self._initialized = True
         logger.info(f"BGE-M3 model initialized on device: {device}")

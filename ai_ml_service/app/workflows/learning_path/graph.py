@@ -36,6 +36,7 @@ def create_learning_path_nodes(generation_service: LLMGenerationService):
                     "preferences": state.preferences,
                 },
                 system_prompt="You are a principal curriculum architect. Construct modular, DAG-valid learning roadmaps.",
+                max_tokens=1200,
             )
             return {"final_output": path_result, "phases": path_result.phases, "status": "phases_constructed"}
         except Exception as exc:

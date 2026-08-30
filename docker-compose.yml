@@ -1,54 +1,9 @@
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    env_file:
-      - ./backend/.env
-    environment:
-      - MONGODB_URI=mongodb://mongodb:27017
-      - REDIS_URL=redis://redis:6379/0
-      - AI_SERVICE_BASE_URL=http://ai_ml_service:8001/v1
-      - AI_SERVICE_API_KEY=ai-service-internal-key
-    ports:
-      - "8000:8000"
-    volumes:
-      - static_files:/app/staticfiles
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    ports:
-      - "8084:8084"
-    depends_on:
-      backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8084/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-
   mongodb:
     image: mongo:7.0
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "27019:27017"
     volumes:
       - mongodb_data:/data/db
     healthcheck:
@@ -62,7 +17,7 @@ services:
     image: redis:7.2-alpine
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6381:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -71,46 +26,138 @@ services:
       timeout: 5s
       retries: 5
 
+  qdrant:
+    image: qdrant/qdrant:v1.9.2
+    restart: unless-stopped
+    ports:
+      - "6335:6333"
+      - "6336:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    # Qdrant's minimal image has no curl/wget — use bash /dev/tcp to probe the port
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
   ai_ml_service:
     build:
       context: ./ai_ml_service
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "8001:8001"
+      - "8090:8001"
     environment:
-      - APP_NAME=learnpath-ai-ml
-      - APP_ENV=production
-      - DEBUG=false
-      - AI_SERVICE_API_KEY=ai-service-internal-key
-      - AI_MOCK_MODE=${AI_MOCK_MODE:-true}
-      - LLM_MODEL_NAME=${LLM_MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}
-      - QDRANT_URL=http://qdrant:6333
-      - QDRANT_COLLECTION=learnpath_resources
+      APP_NAME: learnpath-ai-ml
+      APP_ENV: production
+      DEBUG: "false"
+      AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY:-ai-service-internal-key}
+      AI_MOCK_MODE: "false"
+      REQUIRE_CUDA: "true"
+      LLM_PROVIDER: local_transformers
+      LLM_MODEL_NAME: ${LLM_MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}
+      LLM_LOAD_IN_4BIT: ${LLM_LOAD_IN_4BIT:-true}
+      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-1024}
+      EMBEDDING_PROVIDER: bge_m3
+      EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL_NAME:-BAAI/bge-m3}
+      EMBEDDING_DEVICE: cuda
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-learnpath_resources}
+      ENABLE_RERANKING: ${ENABLE_RERANKING:-true}
+      RERANKER_DEVICE: cuda
+      CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-0}
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
     depends_on:
       qdrant:
-        condition: service_started
+        # Wait for Qdrant port to be open (not service_healthy — avoids circular)
+        condition: service_healthy
+    volumes:
+      - huggingface_cache:/root/.cache/huggingface
+    # curl is installed in the ai_ml_service Dockerfile
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
+      timeout: 15s
+      retries: 5
+      # LLM model loading takes several minutes
+      start_period: 120s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      DEBUG: "false"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-change-this-production-secret}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-this-production-jwt-secret}
+      # '*' allows access from any host including LAN IPs.
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+      # Allow all origins so the frontend served from any LAN IP can connect.
+      CORS_ALLOW_ALL_ORIGINS: "true"
+      MONGODB_URI: mongodb://mongodb:27017
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-learnpath_ai}
+      REDIS_URL: redis://redis:6379/0
+      AI_SERVICE_BASE_URL: http://ai_ml_service:8001
+      AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY:-ai-service-internal-key}
+      USE_INMEMORY_CHANNEL: ${USE_INMEMORY_CHANNEL:-false}
+      ADMIN_INITIAL_EMAIL: ${ADMIN_INITIAL_EMAIL:-admin@learnpath.ai}
+      ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:-change-this-admin-password}
+      ADMIN_INITIAL_NAME: ${ADMIN_INITIAL_NAME:-System Administrator}
+    ports:
+      - "8086:8000"
+    volumes:
+      - static_files:/app/staticfiles
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      # ai_ml_service takes minutes to load models — don't block backend startup
+      ai_ml_service:
+        condition: service_started
+    # Health endpoint returns 200 as long as MongoDB is up (ai_service degraded is OK)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 20s
       timeout: 10s
       retries: 5
-      start_period: 20s
+      start_period: 30s
 
-  qdrant:
-    image: qdrant/qdrant:v1.9.2
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # ws://<server-LAN-ip>:8086 — baked into the JS bundle at build time
+        VITE_BACKEND_WS_URL: ${VITE_BACKEND_WS_URL:-}
+        VITE_BACKEND_HOST: ${VITE_BACKEND_HOST:-}
     restart: unless-stopped
     ports:
-      - "6333:6333"
-      - "6334:6334"
-    volumes:
-      - qdrant_data:/qdrant/storage
-    # qdrant:v1.9.2 is a distroless-style image with no shell/curl/wget.
-    # Healthchecks requiring those tools always fail. Qdrant starts reliably
-    # on its own, so ai_ml_service uses service_started instead.
+      - "8084:8084"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8084/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 volumes:
   mongodb_data:
   redis_data:
   static_files:
   qdrant_data:
+  huggingface_cache:

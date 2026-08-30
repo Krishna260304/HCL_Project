@@ -90,7 +90,9 @@ class BaseAsyncConsumer(AsyncJsonWebsocketConsumer):
 
         action = content.get('action', '')
         request_id = content.get('request_id')
-        payload = content.get('payload', {})
+        payload = content.get('payload') if content.get('payload') is not None else content.get('data', {})
+        if not isinstance(payload, dict):
+            payload = {}
 
         if action == 'ping':
             await self.send_json(success_response(action='pong', request_id=request_id, data={'timestamp': content.get('timestamp')}))

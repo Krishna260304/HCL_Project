@@ -22,4 +22,5 @@ npm run dev
 
 The development server listens on port `8084`.
 
-For a production container, see the root `Dockerfile`.
+For production, configure `VITE_BACKEND_WS_URL` when the backend is on a separate host;
+the root Compose deployment exposes the backend on port `8086` and the frontend on port `8084`.

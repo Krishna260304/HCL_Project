@@ -30,7 +30,17 @@ class LearningPathService:
 
         if not path:
             return {'learning_path': None}
-        return {'learning_path': serialize_mongo_doc(path)}
+
+        serialized = serialize_mongo_doc(path)
+        if not serialized.get('goal'):
+            serialized['goal'] = serialized.get('title', 'Your Learning Path')
+        if serialized.get('phases'):
+            for p in serialized['phases']:
+                if 'id' not in p or not p['id']:
+                    p['id'] = p.get('phase_id', 'phase')
+                if 'estimated_time' not in p or not p['estimated_time']:
+                    p['estimated_time'] = '2-3 weeks'
+        return {'learning_path': serialized}
 
     @classmethod
     def generate_learning_path(cls, payload: Dict[str, Any], user_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
@@ -44,44 +54,68 @@ class LearningPathService:
         from ai_integrations.learning_path import LearningPathClient
         # The onboarding UI uses target_role while older clients use goal.
         # Normalize both here so the career destination is never discarded.
-        target_role = payload.get('target_role') or payload.get('goal') or profile.get('target_outcome')
+        target_role = payload.get('target_role') or payload.get('goal') or profile.get('target_outcome') or (profile.get('goals', [None])[0] if profile.get('goals') else None)
+        effective_goal = goal.get('title') if goal else (target_role or 'Software Mastery')
+
+        raw_verified = profile.get('verified_skills', [])
+        clean_verified = []
+        if isinstance(raw_verified, list):
+            for v in raw_verified:
+                if isinstance(v, dict):
+                    clean_verified.append({
+                        'skill_id': str(v.get('skill_id', '')),
+                        'verified_score': float(v.get('verified_score', 0.0))
+                    })
+                elif isinstance(v, str):
+                    clean_verified.append({'skill_id': v, 'verified_score': 70.0})
+
         input_data = {
             'user_id': str(user_id),
-            'goal': goal.get('title') if goal else (target_role or 'Software Mastery'),
+            'goal': effective_goal,
             'experience_level': profile.get('experience_level', 'beginner'),
-            'verified_skills': profile.get('verified_skills', []),
+            'verified_skills': clean_verified,
             'skill_gaps': payload.get('skill_gaps', profile.get('skill_gaps', [])),
             'interests': profile.get('interests', []),
             'available_hours': profile.get('available_hours', 5),
             'timeline': payload.get('timeline') or profile.get('timeline'),
             'learning_preferences': profile.get('learning_preferences', {}),
         }
-        generated = LearningPathClient.generate_learning_path(input_data)
+        generated = LearningPathClient.generate_learning_path(serialize_mongo_doc(input_data))
 
         raw_phases = generated.get('phases', [])
         formatted_phases = []
         for idx, phase in enumerate(raw_phases):
+            phase_id = phase.get('phase_id') or phase.get('id') or f'phase_{idx + 1}'
             phase_status = PhaseStatus.CURRENT if idx == 0 else PhaseStatus.LOCKED
+            phase_obj = phase.get('objective') or phase.get('description', '')
             formatted_phases.append({
-                'phase_id': phase.get('phase_id', f'phase_{idx + 1}'),
+                'id': str(phase_id),
+                'phase_id': str(phase_id),
                 'title': phase.get('title', f'Phase {idx + 1}'),
                 'description': phase.get('description', ''),
-                'order': idx + 1,
+                'objective': phase_obj,
+                'order': phase.get('order', idx + 1),
                 'skills': phase.get('skills', []),
                 'resources': phase.get('resources', []),
                 'projects': phase.get('projects', []),
-                'assessment_id': phase.get('assessment_id'),
-                'milestone': phase.get('milestone', ''),
+                'assessment': phase.get('assessment') if isinstance(phase.get('assessment'), str) else (phase.get('assessment', {}).get('title') if isinstance(phase.get('assessment'), dict) else None),
+                'assessment_id': phase.get('assessment_id') or (phase.get('assessment', {}).get('assessment_id') if isinstance(phase.get('assessment'), dict) else None),
+                'milestone': phase.get('milestone', 'Phase milestone reached'),
+                'estimated_time': f"{phase.get('estimated_duration_weeks', 2)} weeks" if isinstance(phase.get('estimated_duration_weeks'), (int, float)) else phase.get('estimated_time', '2-3 weeks'),
                 'status': phase_status,
                 'progress': 0.0,
             })
 
+        duration_val = generated.get('estimated_duration_weeks', 8)
+        duration_str = f"{duration_val} weeks" if isinstance(duration_val, (int, float)) else str(duration_val)
+
         path_doc = {
             'user_id': str(user_id),
             'goal_id': str(goal_id) if goal_id else None,
-            'title': generated.get('title', 'Personalized Learning Roadmap'),
+            'goal': effective_goal,
+            'title': generated.get('title', f'Learning Path: {effective_goal}'),
             'description': generated.get('description', 'Custom curated path based on your goals and background.'),
-            'duration': generated.get('estimated_duration_weeks', 8),
+            'duration': duration_str,
             'status': 'active',
             'progress': 0.0,
             'phases': formatted_phases,

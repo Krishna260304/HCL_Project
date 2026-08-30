@@ -7,10 +7,12 @@ class AssessmentGenerationClient:
 
     @classmethod
     def generate_assessment(cls, payload: Dict[str, Any]) -> Dict[str, Any]:
+        payload = dict(payload)
+        payload['num_questions'] = max(5, min(10, int(payload.get('num_questions', 5))))
         try:
-            raw_response = BaseAIClient.post(cls.endpoint, payload)
+            raw_response = BaseAIClient.post(cls.endpoint, payload, timeout=120)
             return cls.normalize_response(raw_response)
-        except ExternalAIServiceUnavailableError:
+        except Exception:
             return cls.fallback_response(payload)
 
     @classmethod
@@ -30,6 +32,7 @@ class AssessmentGenerationClient:
         difficulty = payload.get('difficulty', payload.get('experience_level', 'intermediate')).lower()
         skills = payload.get('skills', []) or ['General Programming']
         goal = payload.get('goal', 'Software Engineer')
+        question_count = max(5, min(10, int(payload.get('num_questions', 5))))
 
         # Domain-aware diagnostic question bank
         question_bank: Dict[str, List[Dict[str, Any]]] = {
@@ -259,19 +262,21 @@ class AssessmentGenerationClient:
             if is_relevant:
                 selected_questions.extend(q_list)
 
-        # Fallback if no specific domain matched
-        if not selected_questions:
-            selected_questions = [
-                q for q_list in [
-                    question_bank['python'],
-                    question_bank['machine_learning'],
-                    question_bank['system_design'],
-                    question_bank['web_development']
-                ] for q in q_list
-            ][:5]
+        # Always return the requested 5–10 questions. When the selected domain
+        # has too few questions, complete the diagnostic from the broad bank.
+        seen_stems = {q['question'] for q in selected_questions}
+        if len(selected_questions) < question_count:
+            for q_list in question_bank.values():
+                for question in q_list:
+                    if question['question'] not in seen_stems:
+                        selected_questions.append(question)
+                        seen_stems.add(question['question'])
+                    if len(selected_questions) >= question_count:
+                        break
+                if len(selected_questions) >= question_count:
+                    break
 
-        # Limit to 5-8 focused questions for high diagnostic signal
-        selected_questions = selected_questions[:8]
+        selected_questions = selected_questions[:question_count]
         for q in selected_questions:
             q['type'] = 'single_select'
 

@@ -52,6 +52,9 @@ interface AuthContextValue extends AuthState {
     email: string;
     password: string;
     name: string;
+    current_role?: string;
+    experience_level?: string;
+    target_outcome?: string;
   }) => Promise<AuthUser>;
   logout: () => Promise<void>;
   isAdmin: boolean;
@@ -113,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const register = useCallback(
-    async (payload: { email: string; password: string; name: string }): Promise<AuthUser> => {
+    async (payload: { email: string; password: string; name: string; current_role?: string; experience_level?: string; target_outcome?: string }): Promise<AuthUser> => {
       dispatch({ type: 'SET_LOADING', loading: true });
       dispatch({ type: 'SET_ERROR', error: null });
       try {

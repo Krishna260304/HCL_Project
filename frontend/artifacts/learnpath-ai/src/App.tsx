@@ -1,32 +1,34 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import {
   ArrowRight, BrainCircuit, Check, Compass,
   Lightbulb, ListChecks, Menu, Radar, Target, TrendingUp, Zap, Sparkles, BookOpen, Bot, ShieldCheck, LockKeyhole,
 } from 'lucide-react';
-import { Link, Route, Switch, Router as WouterRouter } from 'wouter';
+import { Link, Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import AppShell from '@/components/AppShell';
 
-// Dynamic Pages
-import NotFound from '@/pages/not-found';
-import AuthPage from '@/pages/auth';
-import OnboardingSkills from '@/pages/onboarding-skills';
-import Dashboard from '@/pages/dashboard';
-import LearningPath from '@/pages/learning-path';
-import PhaseDetail from '@/pages/phase-detail';
-import Resources from '@/pages/resources';
-import Projects from '@/pages/projects';
-import Skills from '@/pages/skills';
-import Assessments from '@/pages/assessments';
-import Assistant from '@/pages/assistant';
-import ProfilePage from '@/pages/profile';
-import ProgressPage from '@/pages/progress';
-import NotificationsPage from '@/pages/notifications';
-import { AdminLogin, AdminDashboard, AdminModule } from '@/pages/admin';
+// Route chunks load on demand so the public landing page stays small and fast.
+const NotFound = lazy(() => import('@/pages/not-found'));
+const AuthPage = lazy(() => import('@/pages/auth'));
+const OnboardingSkills = lazy(() => import('@/pages/onboarding-skills'));
+const Dashboard = lazy(() => import('@/pages/dashboard'));
+const LearningPath = lazy(() => import('@/pages/learning-path'));
+const PhaseDetail = lazy(() => import('@/pages/phase-detail'));
+const Resources = lazy(() => import('@/pages/resources'));
+const Projects = lazy(() => import('@/pages/projects'));
+const Skills = lazy(() => import('@/pages/skills'));
+const Assessments = lazy(() => import('@/pages/assessments'));
+const Assistant = lazy(() => import('@/pages/assistant'));
+const ProfilePage = lazy(() => import('@/pages/profile'));
+const ProgressPage = lazy(() => import('@/pages/progress'));
+const NotificationsPage = lazy(() => import('@/pages/notifications'));
+const AdminLogin = lazy(async () => ({ default: (await import('@/pages/admin')).AdminLogin }));
+const AdminDashboard = lazy(async () => ({ default: (await import('@/pages/admin')).AdminDashboard }));
+const AdminModule = lazy(async () => ({ default: (await import('@/pages/admin')).AdminModule }));
 
 const queryClient = new QueryClient();
 
@@ -201,6 +203,18 @@ function Feature({ icon, number, title, text }: { icon: React.ReactNode; number:
   );
 }
 
+function AuthenticatedOnboarding() {
+  const { loading, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) setLocation('/login');
+  }, [isAuthenticated, loading, setLocation]);
+
+  if (loading || !isAuthenticated) return <RouteFallback />;
+  return <OnboardingSkills />;
+}
+
 function HowItWorks() {
   return (
     <PublicPage eyebrow="The adaptive loop" title={<>A path that pays attention to <span className="text-[#176b65]">you.</span></>}>
@@ -286,7 +300,7 @@ function AppRouter() {
       {/* Authentication */}
       <Route path="/login"><AuthPage /></Route>
       <Route path="/register"><AuthPage register /></Route>
-      <Route path="/onboarding" component={OnboardingSkills} />
+      <Route path="/onboarding" component={AuthenticatedOnboarding} />
 
       {/* Administrator Control Center */}
       <Route path="/admin/login" component={AdminLogin} />
@@ -324,6 +338,10 @@ function AppRouter() {
   );
 }
 
+function RouteFallback() {
+  return <div className="grid min-h-[60vh] place-items-center bg-[#f7f5ed] text-sm text-[#718079]">Loading your workspace…</div>;
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -331,7 +349,9 @@ export default function App() {
         <TooltipProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
             <ErrorBoundary>
-              <AppRouter />
+              <Suspense fallback={<RouteFallback />}>
+                <AppRouter />
+              </Suspense>
             </ErrorBoundary>
           </WouterRouter>
           <Toaster />

@@ -40,9 +40,18 @@ export default function Assistant() {
     setMessages(prev => [...prev, { from: 'user', text }]);
     setSending(true);
     try {
-      const convId = conversation?.id ?? 'default';
-      const res = await chatService.sendMessage(convId, text);
-      const reply = typeof res === 'object' && 'reply' in res ? (res as { reply: string }).reply : String(res);
+      let convId = conversation?.id || (conversation as any)?._id;
+      if (!convId || convId === 'default') {
+        try {
+          const newConv = await chatService.createConversation('Learning session');
+          setConversation(newConv);
+          convId = newConv.id || (newConv as any)._id;
+        } catch {
+          convId = '';
+        }
+      }
+      const res = await chatService.sendMessage(convId || '', text);
+      const reply = typeof res === 'object' && res && 'reply' in res ? (res as { reply: string }).reply : String(res);
       setMessages(prev => [...prev, { from: 'assistant', text: reply }]);
     } catch (e) {
       setMessages(prev => [...prev, { from: 'assistant', text: 'Sorry, I encountered an error. Please try again.' }]);

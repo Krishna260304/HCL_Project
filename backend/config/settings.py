@@ -138,7 +138,7 @@ ADMIN_INITIAL_EMAIL = os.getenv('ADMIN_INITIAL_EMAIL', 'admin@learnpath.ai')
 ADMIN_INITIAL_PASSWORD = os.getenv('ADMIN_INITIAL_PASSWORD', 'AdminSecurePass123!')
 ADMIN_INITIAL_NAME = os.getenv('ADMIN_INITIAL_NAME', 'System Administrator')
 
-AI_SERVICE_BASE_URL = os.getenv('AI_SERVICE_BASE_URL', 'http://localhost:8001/v1')
+AI_SERVICE_BASE_URL = os.getenv('AI_SERVICE_BASE_URL', 'http://localhost:8001')
 AI_SERVICE_API_KEY = os.getenv('AI_SERVICE_API_KEY', 'ai-service-internal-key')
 AI_SERVICE_TIMEOUT = int(os.getenv('AI_SERVICE_TIMEOUT', '30'))
 
@@ -146,9 +146,28 @@ YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY', '')
 GITHUB_API_TOKEN = os.getenv('GITHUB_API_TOKEN', '')
 KAGGLE_API_KEY = os.getenv('KAGGLE_API_KEY', '')
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173').split(',') if origin.strip()]
+CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'false').lower() in ('true', '1', 'yes') or DEBUG
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        'CORS_ALLOWED_ORIGINS',
+        'http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,http://localhost:8084,http://127.0.0.1:8084'
+    ).split(',')
+    if origin.strip() and origin.strip() != '*'
+]
 CORS_ALLOW_CREDENTIALS = True
+# Allow WebSocket upgrade headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [

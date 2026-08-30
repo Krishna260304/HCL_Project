@@ -1,6 +1,7 @@
 import { wsManager } from './websocket/WebSocketManager';
 
-function unwrapList<T>(value: T[] | Record<string, T[]>, keys: string[]): T[] {
+function unwrapList<T>(value: T[] | Record<string, T[] | undefined> | null | undefined, keys: string[]): T[] {
+  if (!value) return [];
   if (Array.isArray(value)) return value;
   for (const key of keys) if (Array.isArray(value[key])) return value[key] as T[];
   return [];
@@ -205,8 +206,10 @@ export const projectService = {
 export interface Assessment {
   id: string;
   title?: string;
+  description?: string;
   topic?: string;
   skill?: string;
+  skill_ids?: string[];
   difficulty?: string;
   questions_count?: number;
   average_score?: number;
@@ -287,8 +290,10 @@ export const assessmentService = {
     goal?: string;
     difficulty?: string;
     experience_level?: string;
+    num_questions?: number;
   }): Promise<Assessment> {
-    return wsManager.request<Assessment>('assessment.generate_ai', payload, 45_000);
+    const numQuestions = Math.min(10, Math.max(5, payload.num_questions ?? 5));
+    return wsManager.request<Assessment>('assessment.generate_ai', { ...payload, num_questions: numQuestions }, 45_000);
   },
 
   async startAttempt(assessmentId: string): Promise<AssessmentAttempt> {
@@ -401,13 +406,46 @@ export interface ProgressData {
   current_phase?: string | null;
   weekly_data?: Array<{ week: string; hours: number; score: number; progress: number }>;
   skill_progress?: Array<{ name: string; self: number; verified: number; required: number }>;
-  activity?: Array<{ day: string; title: string; duration: string; completed: boolean }>;
+  activity?: ProgressActivity[];
   average_score?: number;
+}
+
+export interface ProgressActivity {
+  action?: string;
+  item_id?: string;
+  timestamp?: string;
+  type?: string;
+  resource_id?: string;
+  assessment_id?: string;
+  progress_percentage?: number;
+}
+
+interface ProgressRecord {
+  time_spent?: number;
+  progress_percentage?: number;
+  status?: string;
+  [key: string]: unknown;
 }
 
 export const progressService = {
   async getProgress(): Promise<ProgressData> {
-    return wsManager.request<ProgressData>('progress.get', {});
+    const response = await wsManager.request<ProgressData | { progress?: ProgressRecord | null; progress_list?: ProgressRecord[] }>('progress.get', {});
+    if ('progress' in response && response.progress) {
+      return {
+        ...response.progress,
+        total_hours: Number(response.progress.time_spent ?? 0) / 60,
+        overall_progress: Number(response.progress.progress_percentage ?? 0),
+      };
+    }
+    if ('progress_list' in response) {
+      const rows = response.progress_list ?? [];
+      const totalMinutes = rows.reduce((sum, row) => sum + Number(row.time_spent ?? 0), 0);
+      const progress = rows.length > 0
+        ? rows.reduce((sum, row) => sum + Number(row.progress_percentage ?? 0), 0) / rows.length
+        : 0;
+      return { total_hours: totalMinutes / 60, overall_progress: Math.round(progress) };
+    }
+    return response as ProgressData;
   },
 
   async updateProgress(payload: Record<string, unknown>): Promise<{ status: string }> {
@@ -418,8 +456,8 @@ export const progressService = {
     return unwrapList(await wsManager.request<Skill[] | { skill_progress?: Skill[] }>('progress.skills', {}), ['skill_progress']);
   },
 
-  async getActivity(): Promise<ProgressData['activity']> {
-    return unwrapList(await wsManager.request<ProgressData['activity'] | { activity?: ProgressData['activity'] }>('progress.activity', {}), ['activity']);
+  async getActivity(): Promise<ProgressActivity[]> {
+    return unwrapList(await wsManager.request<ProgressActivity[] | { activity?: ProgressActivity[] }>('progress.activity', {}), ['activity']);
   },
 };
 

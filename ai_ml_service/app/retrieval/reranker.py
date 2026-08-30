@@ -186,11 +186,14 @@ class CrossEncoderReranker(ResourceRanker):
             return
         try:
             from sentence_transformers import CrossEncoder
+            if self.settings.RERANKER_DEVICE != "cuda":
+                raise RuntimeError("RERANKER_DEVICE must be set to 'cuda' for production inference.")
             self._model = CrossEncoder(self.model_name, device=self.settings.RERANKER_DEVICE)
             self._initialized = True
             logger.info(f"CrossEncoder Reranker loaded: {self.model_name}")
         except Exception as e:
-            logger.warning(f"Could not load CrossEncoder model ({e}). Using baseline ranker.")
+            logger.error(f"Could not load CUDA CrossEncoder model: {e}", exc_info=True)
+            raise RuntimeError("CUDA reranker initialization failed; refusing CPU baseline fallback.") from e
 
     async def rank(
         self,

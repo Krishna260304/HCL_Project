@@ -24,11 +24,12 @@ export default function ProgressPage() {
     setLoading(true);
     setError(null);
     try {
-      const [prog, sk] = await Promise.all([
+      const [prog, sk, activity] = await Promise.all([
         progressService.getProgress().catch(() => null),
         progressService.getSkillProgress().catch(() => []),
+        progressService.getActivity().catch(() => []),
       ]);
-      setProgress(prog);
+      setProgress(prog ? { ...prog, activity } : null);
       setSkills(sk);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load your progress analytics.');

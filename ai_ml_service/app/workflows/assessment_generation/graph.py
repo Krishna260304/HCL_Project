@@ -117,7 +117,33 @@ def create_assessment_nodes(generation_service: LLMGenerationService):
 
     async def finalize_assessment_node(state: AssessmentWorkflowState) -> Dict[str, Any]:
         """Node 6: Finalize assessment metadata and assemble output."""
-        questions = state.valid_questions or state.generated_questions
+        requested_count = max(5, min(10, state.num_questions))
+        questions = list((state.valid_questions or state.generated_questions)[:requested_count])
+
+        # Keep the user-facing contract even when an LLM returns too few valid
+        # items. These deterministic additions are valid MCQs and preserve the
+        # requested diagnostic size without launching another expensive batch.
+        target_skills = state.required_skills or state.knowledge_areas or ["General Problem Solving"]
+        while len(questions) < requested_count:
+            number = len(questions) + 1
+            skill = target_skills[(number - 1) % len(target_skills)]
+            correct_answer = f"Apply the core principles and verify the result for {skill}"
+            questions.append(MCQQuestion(
+                id=f"q_supplemental_{number}",
+                question=f"Which approach is the most reliable way to solve a practical {skill} task?",
+                options=[
+                    correct_answer,
+                    "Skip validation and rely on an untested first result",
+                    "Memorize syntax without understanding the underlying concept",
+                    "Ignore constraints and edge cases until after delivery",
+                ],
+                correct_answer=correct_answer,
+                skill=skill,
+                topic="Applied Foundations",
+                difficulty=state.experience_level,
+                learning_objective=f"Apply reliable problem-solving practices in {skill}",
+                explanation="Reliable work applies the relevant principles, accounts for constraints, and verifies the outcome.",
+            ))
         skill_ids = list({q.get_skill() for q in questions if q.get_skill()})
         topic_ids = list({q.topic for q in questions if q.topic})
 

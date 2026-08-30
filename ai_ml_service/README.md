@@ -82,9 +82,8 @@ The service is specifically optimized for limited VRAM environments:
    ```
 
 2. **Configure Environment**:
-   ```bash
-   cp .env.example .env
-   ```
+   Configure the required environment variables through your deployment platform
+   or Docker secret manager; do not commit local `.env` files.
 
 3. **Run Dev Server**:
    ```bash
@@ -97,9 +96,8 @@ The service is specifically optimized for limited VRAM environments:
 
 ### Docker Deployment
 
-```bash
-docker compose up -d --build
-```
+Build the service image from this directory when deploying the AI service
+separately. The frontend-only root deployment does not start this service.
 
 ---
 
