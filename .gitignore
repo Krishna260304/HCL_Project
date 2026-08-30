@@ -1,7 +1,6 @@
 **/.env
 **/.env.local
 **/.env.production
-**/.env.example
 __pycache__/
 *.py[cod]
 *$py.class
@@ -34,7 +33,6 @@ node_modules/
 **/dist/
 **/.cache/
 *.tsbuildinfo
-.dockerignore
 *.log
 logs/
 .idea/
@@ -45,3 +43,19 @@ Thumbs.db
 *.swo
 artifacts/*/dist/
 staticfiles/
+
+# Local-only data, model artifacts, and training outputs
+**/training/
+**/data/
+**/datasets/
+**/checkpoints/
+**/outputs/
+**/artifacts/*.jsonl
+**/*.safetensors
+**/*.bin
+**/*.pt
+**/*.pth
+wandb/
+mlruns/
+coverage.xml
+htmlcov/

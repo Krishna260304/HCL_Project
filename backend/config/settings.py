@@ -8,7 +8,7 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or 'default-insecure-key-for-development-learnpath-ai'
 
-DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0,*').split(',') if host.strip()]
 
@@ -138,8 +138,8 @@ ADMIN_INITIAL_EMAIL = os.getenv('ADMIN_INITIAL_EMAIL', 'admin@learnpath.ai')
 ADMIN_INITIAL_PASSWORD = os.getenv('ADMIN_INITIAL_PASSWORD', 'AdminSecurePass123!')
 ADMIN_INITIAL_NAME = os.getenv('ADMIN_INITIAL_NAME', 'System Administrator')
 
-AI_SERVICE_BASE_URL = os.getenv('AI_SERVICE_BASE_URL', 'https://api.learnpath.ai/v1/ai')
-AI_SERVICE_API_KEY = os.getenv('AI_SERVICE_API_KEY', 'ai-key')
+AI_SERVICE_BASE_URL = os.getenv('AI_SERVICE_BASE_URL', 'http://localhost:8001/v1')
+AI_SERVICE_API_KEY = os.getenv('AI_SERVICE_API_KEY', 'ai-service-internal-key')
 AI_SERVICE_TIMEOUT = int(os.getenv('AI_SERVICE_TIMEOUT', '30'))
 
 YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY', '')

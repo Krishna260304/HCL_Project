@@ -27,7 +27,6 @@ COPY app/ ./app/
 COPY prompts/ ./prompts/
 COPY models/ ./models/
 COPY scripts/ ./scripts/
-COPY .env.example .env
 
 # Expose port
 EXPOSE 8001

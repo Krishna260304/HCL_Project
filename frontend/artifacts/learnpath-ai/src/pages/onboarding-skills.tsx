@@ -1378,11 +1378,8 @@ export default function OnboardingSkills() {
 
               {/* Phases preview */}
               <div className="mt-8 space-y-3.5">
-                {(generatedPath?.phases || [
-                  { id: '1', title: 'Targeted Remedial Foundations', progress: 0, status: 'current', estimated_time: '2 weeks', objective: 'Bridge verified skill gaps in core architectures.' },
-                  { id: '2', title: 'Applied Core Concepts & Pipeline Building', progress: 0, status: 'upcoming', estimated_time: '3 weeks', objective: 'Hands-on project implementations.' },
-                  { id: '3', title: 'Advanced Production System & Capstone Portfolio', progress: 0, status: 'upcoming', estimated_time: '4 weeks', objective: 'End-to-end production deployment.' }
-                ]).map((phase, idx) => (
+                {(generatedPath?.phases ?? []).length === 0 && <p className="rounded-2xl border border-[#dbe4da] bg-[#fafbf8] p-5 text-sm text-[#63766f]">No roadmap phases were returned. Please retry generation.</p>}
+                {(generatedPath?.phases ?? []).map((phase, idx) => (
                   <div
                     key={phase.id || idx}
                     className={`rounded-2xl border p-5 transition ${idx === 0 ? 'border-[#176b65] bg-[#eaf4ee] shadow-sm' : 'border-[#dce4da] bg-[#fafbf8]'}`}

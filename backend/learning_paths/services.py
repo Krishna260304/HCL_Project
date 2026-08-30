@@ -42,13 +42,18 @@ class LearningPathService:
         goal = GoalRepository.find_by_id(goal_id) if goal_id else None
 
         from ai_integrations.learning_path import LearningPathClient
+        # The onboarding UI uses target_role while older clients use goal.
+        # Normalize both here so the career destination is never discarded.
+        target_role = payload.get('target_role') or payload.get('goal') or profile.get('target_outcome')
         input_data = {
             'user_id': str(user_id),
-            'goal': goal.get('title') if goal else payload.get('goal', 'Software Mastery'),
+            'goal': goal.get('title') if goal else (target_role or 'Software Mastery'),
             'experience_level': profile.get('experience_level', 'beginner'),
             'verified_skills': profile.get('verified_skills', []),
+            'skill_gaps': payload.get('skill_gaps', profile.get('skill_gaps', [])),
             'interests': profile.get('interests', []),
             'available_hours': profile.get('available_hours', 5),
+            'timeline': payload.get('timeline') or profile.get('timeline'),
             'learning_preferences': profile.get('learning_preferences', {}),
         }
         generated = LearningPathClient.generate_learning_path(input_data)

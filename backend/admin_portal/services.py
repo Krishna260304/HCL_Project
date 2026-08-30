@@ -11,8 +11,12 @@ from learning_paths.services import LearningPathService
 from platform_settings.services import PlatformSettingsService
 from audit.services import AuditService
 from analytics.services import AnalyticsService
+from recommendations.services import RecommendationService
 
 class AdminService:
+    @classmethod
+    def list_recommendations(cls, payload: Dict[str, Any], user_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        return RecommendationService.list_all_admin(payload, user_context)
     @classmethod
     def list_users(cls, payload: Dict[str, Any], user_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         return UserService.list_users(payload, user_context)

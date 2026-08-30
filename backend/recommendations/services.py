@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional
-from core.permissions import require_authenticated, require_owner_or_admin
+from core.permissions import require_authenticated, require_owner_or_admin, require_admin
 from core.exceptions import NotFoundError
 from core.utilities import serialize_mongo_doc, serialize_mongo_list
 from recommendations.repository import RecommendationRepository
@@ -8,6 +8,12 @@ from profiles.repository import ProfileRepository
 from resources.repository import ResourceRepository
 
 class RecommendationService:
+    @classmethod
+    def list_all_admin(cls, payload: Dict[str, Any], user_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        require_admin(user_context)
+        query = {'status': payload['status']} if payload.get('status') else None
+        return {'recommendations': serialize_mongo_list(RecommendationRepository.find_all(query))}
+
     @classmethod
     def list_recommendations(cls, payload: Dict[str, Any], user_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         auth_user = require_authenticated(user_context)

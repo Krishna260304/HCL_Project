@@ -1,5 +1,11 @@
 import { wsManager } from './websocket/WebSocketManager';
 
+function unwrapList<T>(value: T[] | Record<string, T[]>, keys: string[]): T[] {
+  if (Array.isArray(value)) return value;
+  for (const key of keys) if (Array.isArray(value[key])) return value[key] as T[];
+  return [];
+}
+
 // ─── Profile types ────────────────────────────────────────────────────────────
 
 export interface LearnerProfile {
@@ -80,7 +86,7 @@ export interface Goal {
 
 export const goalService = {
   async listGoals(): Promise<Goal[]> {
-    return wsManager.request<Goal[]>('goal.list', {});
+    return unwrapList(await wsManager.request<Goal[] | { goals?: Goal[] }>('goal.list', {}), ['goals']);
   },
 
   async createGoal(payload: Partial<Goal>): Promise<Goal> {
@@ -128,7 +134,7 @@ export interface SkillGraph {
 
 export const skillService = {
   async listSkills(payload: Record<string, unknown> = {}): Promise<Skill[]> {
-    return wsManager.request<Skill[]>('skill.list', payload);
+    return unwrapList(await wsManager.request<Skill[] | { skills?: Skill[] }>('skill.list', payload), ['skills']);
   },
 
   async getSkill(skillId: string): Promise<Skill> {
@@ -159,11 +165,11 @@ export interface Resource {
 
 export const resourceService = {
   async listResources(payload: Record<string, unknown> = {}): Promise<Resource[]> {
-    return wsManager.request<Resource[]>('resource.list', payload);
+    return unwrapList(await wsManager.request<Resource[] | { resources?: Resource[] }>('resource.list', payload), ['resources']);
   },
 
   async searchResources(query: string, filters: Record<string, unknown> = {}): Promise<Resource[]> {
-    return wsManager.request<Resource[]>('resource.search', { query, ...filters });
+    return unwrapList(await wsManager.request<Resource[] | { resources?: Resource[] }>('resource.search', { query, ...filters }), ['resources']);
   },
 
   async getResource(resourceId: string): Promise<Resource> {
@@ -186,7 +192,7 @@ export interface Project {
 
 export const projectService = {
   async listProjects(payload: Record<string, unknown> = {}): Promise<Project[]> {
-    return wsManager.request<Project[]>('project.list', payload);
+    return unwrapList(await wsManager.request<Project[] | { projects?: Project[] }>('project.list', payload), ['projects']);
   },
 
   async getProject(projectId: string): Promise<Project> {
@@ -260,7 +266,7 @@ export interface AssessmentResult {
 
 export const assessmentService = {
   async listAssessments(payload: Record<string, unknown> = {}): Promise<Assessment[]> {
-    return wsManager.request<Assessment[]>('assessment.list', payload);
+    return unwrapList(await wsManager.request<Assessment[] | { assessments?: Assessment[] }>('assessment.list', payload), ['assessments']);
   },
 
   async getAssessment(assessmentId: string): Promise<Assessment> {
@@ -334,7 +340,8 @@ export interface LearningPath {
 
 export const learningPathService = {
   async getLearningPath(): Promise<LearningPath> {
-    return wsManager.request<LearningPath>('learning_path.get', {});
+    const result = await wsManager.request<LearningPath | { learning_path?: LearningPath }>('learning_path.get', {});
+    return ('learning_path' in result ? result.learning_path : result) as LearningPath;
   },
 
   async generateLearningPath(payload: Record<string, unknown> = {}): Promise<LearningPath> {
@@ -408,11 +415,11 @@ export const progressService = {
   },
 
   async getSkillProgress(): Promise<Skill[]> {
-    return wsManager.request<Skill[]>('progress.skills', {});
+    return unwrapList(await wsManager.request<Skill[] | { skill_progress?: Skill[] }>('progress.skills', {}), ['skill_progress']);
   },
 
   async getActivity(): Promise<ProgressData['activity']> {
-    return wsManager.request<ProgressData['activity']>('progress.activity', {});
+    return unwrapList(await wsManager.request<ProgressData['activity'] | { activity?: ProgressData['activity'] }>('progress.activity', {}), ['activity']);
   },
 };
 
@@ -429,7 +436,7 @@ export interface Notification {
 
 export const notificationService = {
   async listNotifications(payload: Record<string, unknown> = {}): Promise<Notification[]> {
-    return wsManager.request<Notification[]>('notification.list', payload);
+    return unwrapList(await wsManager.request<Notification[] | { notifications?: Notification[] }>('notification.list', payload), ['notifications']);
   },
 
   async markRead(notificationId: string): Promise<void> {
@@ -467,19 +474,32 @@ export const chatService = {
     conversationId: string,
     message: string,
   ): Promise<{ reply: string; conversation_id: string; sources?: unknown[] }> {
-    return wsManager.request(
+    const result = await wsManager.request<{
+      reply?: string;
+      assistant_message?: { content?: string };
+      conversation_id?: string;
+      sources?: unknown[];
+      recommended_actions?: unknown[];
+    }>(
       'chat.send',
       { conversation_id: conversationId, message },
       60_000,
     );
+    return {
+      reply: result.reply || result.assistant_message?.content || 'I could not generate a response yet.',
+      conversation_id: result.conversation_id || conversationId,
+      sources: result.sources,
+    };
   },
 
   async listConversations(): Promise<ChatConversation[]> {
-    return wsManager.request<ChatConversation[]>('chat.conversations', {});
+    const result = await wsManager.request<{ conversations?: ChatConversation[] } | ChatConversation[]>('chat.conversations', {});
+    return Array.isArray(result) ? result : result.conversations ?? [];
   },
 
   async getHistory(conversationId: string): Promise<ChatMessage[]> {
-    return wsManager.request<ChatMessage[]>('chat.history', { conversation_id: conversationId });
+    const result = await wsManager.request<{ messages?: ChatMessage[] } | ChatMessage[]>('chat.history', { conversation_id: conversationId });
+    return Array.isArray(result) ? result : result.messages ?? [];
   },
 
   async createConversation(title?: string): Promise<ChatConversation> {
@@ -549,11 +569,23 @@ export const adminService = {
   },
 
   async listAuditLogs(payload: Record<string, unknown> = {}): Promise<unknown[]> {
-    return wsManager.request<unknown[]>('admin.audit.list', payload);
+    const result = await wsManager.request<unknown[] | { audit_logs?: unknown[] }>('admin.audit.list', payload);
+    return unwrapList(result, ['audit_logs']);
   },
 
   async listLearningPaths(payload: Record<string, unknown> = {}): Promise<unknown[]> {
-    return wsManager.request<unknown[]>('admin.learning_paths.list', payload);
+    const result = await wsManager.request<unknown[] | { learning_paths?: unknown[] }>('admin.learning_paths.list', payload);
+    return unwrapList(result, ['learning_paths']);
+  },
+
+  async adminListCourses(payload: Record<string, unknown> = {}): Promise<any[]> {
+    const result = await wsManager.request<any[] | { courses?: any[] }>('course.list', payload);
+    return unwrapList(result, ['courses']);
+  },
+
+  async listRecommendations(payload: Record<string, unknown> = {}): Promise<any[]> {
+    const result = await wsManager.request<any[] | { recommendations?: any[] }>('admin.recommendations.list', payload);
+    return unwrapList(result, ['recommendations']);
   },
 
   async getSettings(): Promise<Record<string, unknown>> {
@@ -574,7 +606,7 @@ export const adminService = {
 
   // Resources
   async adminListResources(payload: Record<string, unknown> = {}): Promise<Resource[]> {
-    return wsManager.request<Resource[]>('resource.list', payload);
+    return unwrapList(await wsManager.request<Resource[] | { resources?: Resource[] }>('resource.list', payload), ['resources']);
   },
   async approveResource(resourceId: string): Promise<void> {
     await wsManager.request('admin.resources.approve', { resource_id: resourceId });
@@ -594,7 +626,7 @@ export const adminService = {
 
   // Skills
   async adminListSkills(payload: Record<string, unknown> = {}): Promise<Skill[]> {
-    return wsManager.request<Skill[]>('skill.list', payload);
+    return unwrapList(await wsManager.request<Skill[] | { skills?: Skill[] }>('skill.list', payload), ['skills']);
   },
   async createSkill(payload: Record<string, unknown>): Promise<Skill> {
     return wsManager.request<Skill>('admin.skills.create', payload);
@@ -608,7 +640,7 @@ export const adminService = {
 
   // Assessments
   async adminListAssessments(payload: Record<string, unknown> = {}): Promise<Assessment[]> {
-    return wsManager.request<Assessment[]>('assessment.list', payload);
+    return unwrapList(await wsManager.request<Assessment[] | { assessments?: Assessment[] }>('assessment.list', payload), ['assessments']);
   },
   async createAssessment(payload: Record<string, unknown>): Promise<Assessment> {
     return wsManager.request<Assessment>('admin.assessments.create', payload);
@@ -622,7 +654,7 @@ export const adminService = {
 
   // Notifications (admin)
   async adminListNotifications(payload: Record<string, unknown> = {}): Promise<Notification[]> {
-    return wsManager.request<Notification[]>('notification.list', payload);
+    return unwrapList(await wsManager.request<Notification[] | { notifications?: Notification[] }>('notification.list', payload), ['notifications']);
   },
 
   onUserUpdated(callback: (data: unknown) => void): () => void {

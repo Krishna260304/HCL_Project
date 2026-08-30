@@ -59,7 +59,10 @@ const MAX_RECONNECT_ATTEMPTS = 10;
 
 function getBackendWsUrl(token?: string | null): string {
   const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-  const host = import.meta.env.VITE_BACKEND_HOST ?? 'localhost:8000';
+  // In production the frontend and backend may be served from the same host.
+  // Keep an explicit override for split deployments, but do not silently point
+  // a deployed browser at the user's own localhost.
+  const host = import.meta.env.VITE_BACKEND_HOST || `${window.location.hostname}:8000`;
   const path = '/ws/';
   const base = `${proto}://${host}${path}`;
   return token ? `${base}?token=${encodeURIComponent(token)}` : base;

@@ -63,9 +63,13 @@ class ChatService:
 
         return {
             'conversation_id': str(conv_id),
+            # Keep a small, stable response field for clients that only need
+            # the assistant text. The full message is still returned below.
+            'reply': ai_msg_doc['content'],
             'user_message': serialize_mongo_doc({**user_msg_doc, '_id': user_msg_id}),
             'assistant_message': serialize_mongo_doc({**ai_msg_doc, '_id': ai_msg_id}),
             'recommended_actions': ai_response.get('recommended_actions', []),
+            'sources': ai_response.get('sources', []),
         }
 
     @classmethod

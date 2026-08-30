@@ -327,6 +327,7 @@ class UnifiedGatewayConsumer(BaseAsyncConsumer):
             'admin.users.get': lambda payload, user: AdminService.get_user(payload, user),
             'admin.users.update_status': lambda payload, user: AdminService.update_user_status(payload, user),
             'admin.users.delete': lambda payload, user: AdminService.delete_user(payload, user),
+            'admin.recommendations.list': lambda payload, user: AdminService.list_recommendations(payload, user),
 
             'admin.onboarding.questions.list': lambda payload, user: AdminService.list_onboarding_questions(payload, user),
             'admin.onboarding.questions.create': lambda payload, user: AdminService.create_onboarding_question(payload, user),

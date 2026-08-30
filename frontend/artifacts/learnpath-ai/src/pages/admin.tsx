@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Activity, AlertTriangle, ArrowRight, Bell, BookOpen, Bot, Check, CheckCircle2, ChevronDown,
   Code2, Database, FileText, Flame, Gauge, LayoutDashboard, Lock, LogOut, Menu, MessageSquare,
@@ -6,8 +6,8 @@ import {
   ToggleLeft, ToggleRight, Trash2, TrendingUp, Users, Workflow, X, Zap,
 } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
-
-// ─── Mock data ───────────────────────────────────────────────────────────────
+import { useAuth } from '@/context/AuthContext';
+import { adminService } from '@/services';
 
 const adminNav = [
   { slug: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -26,96 +26,9 @@ const adminNav = [
 ] as const;
 type Slug = typeof adminNav[number]['slug'];
 
-const learnersMock = [
-  { id: '1', name: 'Maya Chen', email: 'maya.chen@example.com', goal: 'AI Engineer', status: 'Active', progress: 74, joined: 'Apr 12, 2025', lastActive: '2h ago', experience: '3–5 years' },
-  { id: '2', name: 'Arjun Mehta', email: 'arjun.mehta@example.com', goal: 'Data Scientist', status: 'Active', progress: 48, joined: 'Apr 10, 2025', lastActive: '1d ago', experience: '1–2 years' },
-  { id: '3', name: 'Sofia Alvarez', email: 'sofia.a@example.com', goal: 'Frontend Developer', status: 'Suspended', progress: 31, joined: 'Apr 08, 2025', lastActive: '5d ago', experience: 'Just starting' },
-  { id: '4', name: 'Noah Williams', email: 'noah.w@example.com', goal: 'Cloud Engineer', status: 'Active', progress: 62, joined: 'Apr 06, 2025', lastActive: '3h ago', experience: '1–2 years' },
-  { id: '5', name: 'Priya Sharma', email: 'priya.s@example.com', goal: 'ML Engineer', status: 'Active', progress: 88, joined: 'Mar 28, 2025', lastActive: '1h ago', experience: '3–5 years' },
-  { id: '6', name: 'Lucas Costa', email: 'lucas.c@example.com', goal: 'Full-Stack Developer', status: 'Inactive', progress: 12, joined: 'Apr 15, 2025', lastActive: '10d ago', experience: 'Just starting' },
-];
+const displayMetric = (value: unknown): string => value === undefined || value === null || value === '' ? '—' : typeof value === 'number' ? value.toLocaleString() : String(value);
 
-const coursesMock = [
-  { id: '1', title: 'ML Foundations Bootcamp', category: 'Machine Learning', difficulty: 'Beginner', skills: ['Python', 'Scikit-learn'], duration: '3 weeks', status: 'Published', resources: 12, updated: 'Apr 18, 2025' },
-  { id: '2', title: 'Deep Learning Mastery', category: 'Deep Learning', difficulty: 'Intermediate', skills: ['PyTorch', 'Neural networks'], duration: '5 weeks', status: 'Published', resources: 18, updated: 'Apr 20, 2025' },
-  { id: '3', title: 'Transformers Explained', category: 'NLP', difficulty: 'Advanced', skills: ['Transformers', 'Hugging Face'], duration: '4 weeks', status: 'Draft', resources: 9, updated: 'Apr 22, 2025' },
-  { id: '4', title: 'AI Systems in Production', category: 'MLOps', difficulty: 'Advanced', skills: ['RAG', 'Deployment'], duration: '5 weeks', status: 'Published', resources: 15, updated: 'Apr 17, 2025' },
-];
-
-const skillsMock = [
-  { name: 'Python', category: 'Programming', difficulty: 'Beginner', learners: 18420, related: ['NumPy', 'Pandas'], status: 'Active' },
-  { name: 'Machine Learning', category: 'AI/ML', difficulty: 'Intermediate', learners: 12380, related: ['Scikit-learn', 'Statistics'], status: 'Active' },
-  { name: 'PyTorch', category: 'Deep Learning', difficulty: 'Intermediate', learners: 8210, related: ['Neural networks', 'CUDA'], status: 'Active' },
-  { name: 'Transformers', category: 'NLP', difficulty: 'Advanced', learners: 5640, related: ['Attention', 'Hugging Face'], status: 'Active' },
-  { name: 'RAG', category: 'Generative AI', difficulty: 'Advanced', learners: 3820, related: ['Embeddings', 'Vector DB'], status: 'Active' },
-  { name: 'Docker', category: 'DevOps', difficulty: 'Intermediate', learners: 7190, related: ['Kubernetes', 'CI/CD'], status: 'Active' },
-];
-
-const assessmentsMock = [
-  { id: '1', name: 'ML Foundations', skill: 'Machine Learning', difficulty: 'Core', questions: 18, avgScore: 81, attempts: 4230, status: 'Published' },
-  { id: '2', name: 'Python for ML', skill: 'Python', difficulty: 'Core', questions: 12, avgScore: 87, attempts: 6100, status: 'Published' },
-  { id: '3', name: 'Neural Networks Deep Dive', skill: 'Deep Learning', difficulty: 'Stretch', questions: 20, avgScore: 68, attempts: 1820, status: 'Published' },
-  { id: '4', name: 'Transformer Architecture', skill: 'Transformers', difficulty: 'Stretch', questions: 15, avgScore: 59, attempts: 890, status: 'Draft' },
-];
-
-const resourcesMock = [
-  { id: '1', title: 'Neural Networks: Zero to Hero', source: 'YouTube', type: 'Video', skill: 'Neural networks', quality: 98, status: 'Approved' },
-  { id: '2', title: 'The Illustrated Transformer', source: 'Blog', type: 'Article', skill: 'Transformers', quality: 95, status: 'Approved' },
-  { id: '3', title: 'PyTorch 60-min Blitz', source: 'Documentation', type: 'Interactive', skill: 'PyTorch', quality: 91, status: 'Approved' },
-  { id: '4', title: 'Intro to Backpropagation', source: 'YouTube', type: 'Video', skill: 'Deep learning', quality: 74, status: 'Pending' },
-  { id: '5', title: 'RAG Systems at Scale', source: 'GitHub', type: 'Code', skill: 'RAG', quality: 88, status: 'Pending' },
-];
-
-const recsMock = [
-  { learner: 'Maya Chen', resource: 'Transformers Explained', skill: 'Transformers', reason: 'Matches next phase skill gap', score: 94, status: 'Accepted' },
-  { learner: 'Arjun Mehta', resource: 'Statistics for DS', skill: 'Statistics', reason: 'Prerequisite gap detected', score: 89, status: 'Skipped' },
-  { learner: 'Noah Williams', resource: 'AWS Cloud Practitioner', skill: 'AWS', reason: 'Goal alignment — Cloud Engineer', score: 91, status: 'Accepted' },
-  { learner: 'Priya Sharma', resource: 'Hugging Face Course', skill: 'Fine-tuning', reason: 'Advanced path milestone', score: 96, status: 'Accepted' },
-];
-
-const pathsMock = [
-  { id: '1', goal: 'Become an AI Engineer', learner: 'Maya Chen', progress: 74, phases: 4, status: 'Active', created: 'Feb 12, 2025' },
-  { id: '2', goal: 'Become a Data Scientist', learner: 'Arjun Mehta', progress: 48, phases: 4, status: 'Active', created: 'Feb 10, 2025' },
-  { id: '3', goal: 'Frontend Developer', learner: 'Sofia Alvarez', progress: 31, phases: 3, status: 'Suspended', created: 'Feb 08, 2025' },
-  { id: '4', goal: 'Cloud Engineer', learner: 'Noah Williams', progress: 62, phases: 5, status: 'Active', created: 'Feb 06, 2025' },
-];
-
-const auditMock = [
-  { time: '09:14', event: 'Admin modified skill taxonomy', admin: 'admin@example.com', action: 'Edit', severity: 'medium' },
-  { time: '09:02', event: 'User account suspended', admin: 'admin@example.com', action: 'Suspend', severity: 'high' },
-  { time: '08:48', event: 'Resource approved', admin: 'admin@example.com', action: 'Approve', severity: 'low' },
-  { time: '08:31', event: 'Assessment published', admin: 'admin@example.com', action: 'Publish', severity: 'low' },
-  { time: '08:15', event: 'AI model temperature updated', admin: 'admin@example.com', action: 'Config', severity: 'medium' },
-  { time: '07:58', event: 'Recommendation weights saved', admin: 'admin@example.com', action: 'Config', severity: 'medium' },
-  { time: '07:40', event: 'New learner registered', admin: 'System', action: 'Register', severity: 'low' },
-  { time: '07:28', event: 'Learning path generated via AI', admin: 'System', action: 'Generate', severity: 'low' },
-];
-
-const notifMock = [
-  { id: '1', title: 'New feature: AI path adjustments', type: 'Announcement', target: 'All Learners', status: 'Published', priority: 'High', date: 'Apr 22, 2025' },
-  { id: '2', title: 'Scheduled maintenance — Apr 28', type: 'System', target: 'All Learners', status: 'Scheduled', priority: 'Medium', date: 'Apr 28, 2025' },
-  { id: '3', title: 'Complete your baseline assessment', type: 'Reminder', target: 'New Learners', status: 'Draft', priority: 'Low', date: 'Apr 22, 2025' },
-];
-
-const dashStats = [
-  { label: 'Total learners', value: '24,832', delta: '+12.4%', color: '#176b65' },
-  { label: 'Active this week', value: '8,421', delta: '+8.7%', color: '#176b65' },
-  { label: 'Paths generated', value: '14,320', delta: '+16.2%', color: '#176b65' },
-  { label: 'Resources live', value: '18,492', delta: '+4.3%', color: '#176b65' },
-  { label: 'Assessments taken', value: '7,320', delta: '+11.1%', color: '#176b65' },
-  { label: 'AI conversations', value: '42,931', delta: '+22.8%', color: '#d89c2c' },
-  { label: 'Skills in catalog', value: '486', delta: '+3.0%', color: '#176b65' },
-  { label: 'Projects shipped', value: '2,180', delta: '+9.5%', color: '#176b65' },
-];
-
-const activities = [
-  { event: 'New learner registered', time: '1 hour ago', actor: 'System', tag: 'register' },
-  { event: 'Assessment generated for Arjun Mehta', time: '2 hours ago', actor: 'AI system', tag: 'assess' },
-  { event: 'Resource approved: RAG Systems at Scale', time: '3 hours ago', actor: 'admin@example.com', tag: 'approve' },
-  { event: 'Recommendation weights updated', time: '4 hours ago', actor: 'admin@example.com', tag: 'config' },
-  { event: 'New project published by Maya Chen', time: '5 hours ago', actor: 'Maya Chen', tag: 'publish' },
-  { event: 'AI model temperature adjusted (0.7→0.5)', time: '6 hours ago', actor: 'admin@example.com', tag: 'config' },
-];
+const dashStats: Array<{ label: string; value: string; delta: string; color: string }> = [];
 
 // ─── Shared UI ────────────────────────────────────────────────────────────────
 
@@ -138,9 +51,12 @@ const CardWrap = ({ title, sub, action, className = '', children }: { title: str
 
 function AdminLogin() {
   const [, setLocation] = useLocation();
-  const [email, setEmail] = useState('admin@example.com');
+  const { login, logout, isAdmin, loading: authLoading } = useAuth();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  useEffect(() => { if (!authLoading && isAdmin) setLocation('/admin/dashboard'); }, [authLoading, isAdmin, setLocation]);
   return (
     <div className="grid min-h-[100dvh] place-items-center bg-[#f4f6f1] px-5">
       <div className="w-full max-w-md rounded-3xl border border-[#dbe4da] bg-[#fafbf8] p-8 shadow-[0_20px_70px_rgba(42,67,57,.08)] md:p-10">
@@ -151,12 +67,12 @@ function AdminLogin() {
         <p className="mt-10 font-mono text-[10px] uppercase tracking-[.18em] text-[#b17820]">Restricted access</p>
         <h1 className="mt-3 text-4xl font-bold tracking-[-.05em] text-[#1f312e]">Administrator sign in</h1>
         <p className="mt-3 text-sm leading-6 text-[#718079]">This area is reserved for platform administrators only. There is no public admin registration.</p>
-        <form className="mt-8 space-y-4" onSubmit={e => { e.preventDefault(); if (email === 'admin@example.com' && password === 'admin123') setLocation('/admin/dashboard'); else setError('Demo credentials: admin@example.com / admin123'); }}>
+        <form className="mt-8 space-y-4" onSubmit={async e => { e.preventDefault(); setError(''); setSubmitting(true); try { const user = await login(email, password); if (user.role !== 'admin') { await logout(); throw new Error('This account does not have administrator access.'); } setLocation('/admin/dashboard'); } catch (err) { setError(err instanceof Error ? err.message : 'Unable to sign in.'); } finally { setSubmitting(false); } }}>
           <label className="block text-sm font-bold text-[#36504a]">Email<input value={email} onChange={e => setEmail(e.target.value)} type="email" className="mt-2 w-full rounded-xl border border-[#ccd8ce] bg-white px-4 py-3 text-sm outline-none focus:border-[#176b65] focus:ring-2 focus:ring-[#176b65]/10" /></label>
           <label className="block text-sm font-bold text-[#36504a]">Password<input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="••••••••" autoComplete="current-password" className="mt-2 w-full rounded-xl border border-[#ccd8ce] bg-white px-4 py-3 text-sm outline-none focus:border-[#176b65] focus:ring-2 focus:ring-[#176b65]/10" /></label>
           <label className="flex items-center gap-2 text-xs text-[#718079]"><input type="checkbox" className="accent-[#176b65]" /> Remember me</label>
           {error && <p className="rounded-xl bg-[#fbe9e5] px-4 py-3 text-xs font-bold text-[#a04b3e]">{error}</p>}
-          <button className="w-full rounded-xl bg-[#176b65] px-4 py-3 text-sm font-bold text-white hover:bg-[#115a55]">Sign in <ArrowRight size={15} className="ml-1 inline" /></button>
+          <button disabled={submitting} className="w-full rounded-xl bg-[#176b65] px-4 py-3 text-sm font-bold text-white hover:bg-[#115a55] disabled:cursor-wait disabled:opacity-60">{submitting ? 'Signing in…' : 'Sign in'} <ArrowRight size={15} className="ml-1 inline" /></button>
         </form>
         <button className="mt-5 w-full text-center text-xs font-bold text-[#176b65]">Forgot password?</button>
         <Link href="/" className="mt-8 block text-center text-xs font-bold text-[#83918a] hover:text-[#36504a]">← Return to learner site</Link>
@@ -169,8 +85,11 @@ function AdminLogin() {
 
 function AdminShell({ children, active }: { children: React.ReactNode; active: Slug | string }) {
   const [, setLocation] = useLocation();
+  const { isAdmin, loading: authLoading, logout } = useAuth();
   const [drawer, setDrawer] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => { if (!authLoading && !isAdmin) setLocation('/admin/login'); }, [authLoading, isAdmin, setLocation]);
+  if (authLoading || !isAdmin) return <div className="grid min-h-[100dvh] place-items-center bg-[#f3f6f1] text-sm text-[#60746d]">Checking administrator session…</div>;
 
   const Sidebar = () => (
     <aside className={`flex h-full flex-col bg-[#172e29] py-4 text-[#e7f0e8] transition-all ${collapsed ? 'w-[70px]' : 'w-[256px]'}`}>
@@ -190,7 +109,7 @@ function AdminShell({ children, active }: { children: React.ReactNode; active: S
           </Link>
         ))}
       </nav>
-      <button onClick={() => setLocation('/')} className={`mx-2 mt-2 flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold text-[#a8c6b8] hover:bg-[#243f39] hover:text-white ${collapsed ? 'justify-center' : ''}`}>
+      <button onClick={async () => { await logout(); setLocation('/admin/login'); }} className={`mx-2 mt-2 flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold text-[#a8c6b8] hover:bg-[#243f39] hover:text-white ${collapsed ? 'justify-center' : ''}`}>
         <LogOut size={15} />{!collapsed && 'Log out'}
       </button>
     </aside>
@@ -231,6 +150,26 @@ function AdminShell({ children, active }: { children: React.ReactNode; active: S
 // ─── Admin dashboard ──────────────────────────────────────────────────────────
 
 function AdminDashboard() {
+  const [analytics, setAnalytics] = useState<any | null>(null);
+  const [analyticsError, setAnalyticsError] = useState('');
+  useEffect(() => {
+    adminService.getAnalyticsOverview().then(setAnalytics).catch(err => setAnalyticsError(err instanceof Error ? err.message : 'Live analytics unavailable.'));
+  }, []);
+  const users = analytics?.users ?? {};
+  const catalog = analytics?.catalog ?? {};
+  const assessments = analytics?.assessments ?? {};
+  const pathsMetrics = analytics?.learning_paths ?? {};
+  const stats = analytics ? [
+    ['Total learners', users.learners ?? 0, '#176b65'],
+    ['Active users', users.active ?? 0, '#176b65'],
+    ['Paths generated', pathsMetrics.total ?? 0, '#176b65'],
+    ['Resources live', catalog.resources ?? 0, '#176b65'],
+    ['Assessments taken', assessments.attempts ?? 0, '#176b65'],
+    ['AI conversations', analytics.ai_conversations ?? '—', '#d89c2c'],
+    ['Skills in catalog', catalog.skills ?? 0, '#176b65'],
+    ['Projects shipped', catalog.projects ?? 0, '#176b65'],
+  ].map(([label, value, color]) => ({ label, value: displayMetric(value), delta: 'Live', color })) : dashStats;
+  const activities = analytics?.recent_activities ?? [];
   return (
     <AdminShell active="dashboard">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -238,7 +177,7 @@ function AdminDashboard() {
         <span className="flex items-center gap-2 rounded-full bg-[#dceee4] px-4 py-2 text-xs font-bold text-[#176b65]"><span className="size-2 animate-pulse rounded-full bg-[#176b65]" />All systems operational</span>
       </div>
       <div className="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {dashStats.map(({ label, value, delta }) => (
+        {stats.map(({ label, value, delta }) => (
           <div key={label} className="rounded-2xl border border-[#dbe4da] bg-[#fafbf8] p-5 shadow-sm">
             <p className="text-xs text-[#83918a]">{label}</p>
             <p className="mt-3 font-mono text-3xl font-medium text-[#1f312e]">{value}</p>
@@ -246,11 +185,13 @@ function AdminDashboard() {
           </div>
         ))}
       </div>
+      {analyticsError && <p className="mt-4 rounded-xl bg-[#fae9bb] px-4 py-3 text-xs font-bold text-[#93611a]">{analyticsError} Showing a safe empty state until the API is available.</p>}
       <div className="mt-5 grid gap-5 xl:grid-cols-[1.35fr_.65fr]">
         <CardWrap title="Platform activity" sub="Real-time control plane events">
           <div className="divide-y divide-[#edf0eb]">
-            {activities.map(a => (
-              <div key={a.event} className="flex items-center gap-4 px-6 py-4">
+            {activities.length === 0 && <p className="px-6 py-8 text-sm text-[#83918a]">No recent activity recorded.</p>}
+            {activities.map((a: any, i: number) => (
+              <div key={`${a.event}-${i}`} className="flex items-center gap-4 px-6 py-4">
                 <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#e8f1ec] text-[#176b65]"><CheckCircle2 size={16} /></span>
                 <div className="flex-1 min-w-0"><p className="truncate text-sm font-bold">{a.event}</p><p className="mt-0.5 text-[10px] text-[#89968f]">{a.time} · {a.actor}</p></div>
                 <ArrowRight size={14} className="shrink-0 text-[#c0ccbf]" />
@@ -277,9 +218,37 @@ function AdminDashboard() {
 
 function UsersModule() {
   const [query, setQuery] = useState('');
-  const [items, setItems] = useState(learnersMock);
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
-  const toggle = (id: string) => setItems(c => c.map(u => u.id === id ? { ...u, status: u.status === 'Active' ? 'Suspended' : 'Active' } : u));
+  useEffect(() => {
+    let cancelled = false;
+    adminService.listUsers({ page_size: 100 }).then(users => {
+      if (cancelled) return;
+      setItems(users.map((u: any) => ({
+        ...u,
+        name: u.name || u.email,
+        status: String(u.status || 'active').replace('_', ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+        goal: u.goal || 'Not set',
+        experience: u.experience || 'Not set',
+        progress: u.progress || 0,
+        joined: u.created_at ? new Date(u.created_at).toLocaleDateString() : '—',
+        lastActive: u.last_login_at ? new Date(u.last_login_at).toLocaleDateString() : '—',
+      })));
+    }).catch(err => { if (!cancelled) setLoadError(err instanceof Error ? err.message : 'Unable to load users.'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+  const toggle = async (id: string) => {
+    const current = items.find(u => u.id === id);
+    if (!current) return;
+    const next = current.status === 'Active' ? 'suspended' : 'active';
+    try {
+      await adminService.updateUserStatus(id, next);
+      setItems(c => c.map(u => u.id === id ? { ...u, status: next === 'active' ? 'Active' : 'Suspended' } : u));
+    } catch (err) { setLoadError(err instanceof Error ? err.message : 'Unable to update user.'); }
+  };
   const rows = items.filter(u => `${u.name} ${u.email} ${u.goal}`.toLowerCase().includes(query.toLowerCase()));
   const user = items.find(u => u.id === selected);
   return (
@@ -310,7 +279,7 @@ function UsersModule() {
             <div className="space-y-5">
               <CardWrap title="Learning path" sub="Current progress across all phases">
                 <div className="divide-y divide-[#edf0eb]">
-                  {[['ML Foundations', 100, 'Complete'], ['Deep Learning', 62, 'Current'], ['Transformers', 0, 'Upcoming'], ['AI Systems', 0, 'Upcoming']].map(([ph, pct, st]) => (
+                  {([] as Array<[string, number, string]>).map(([ph, pct, st]) => (
                     <div key={ph as string} className="flex items-center gap-4 px-6 py-3.5">
                       <span className="flex-1 text-sm font-bold text-[#40534d]">{ph as string}</span>
                       <div className="w-28 h-1.5 rounded-full bg-[#e3e9e1]"><div className="h-full rounded-full bg-[#176b65]" style={{ width: `${pct}%` }} /></div>
@@ -321,7 +290,7 @@ function UsersModule() {
               </CardWrap>
               <CardWrap title="Assessment history">
                 <div className="divide-y divide-[#edf0eb]">
-                  {[['ML Foundations', 84, 'Passed'], ['Python for ML', 92, 'Passed'], ['Neural Networks', null, 'Not started']].map(([t, s, st]) => (
+                  {([] as Array<[string, number | null, string]>).map(([t, s, st]) => (
                     <div key={t as string} className="flex items-center gap-4 px-6 py-3.5">
                       <span className="flex-1 text-sm font-bold text-[#40534d]">{t as string}</span>
                       <span className="font-mono text-sm">{s ? `${s}%` : '—'}</span>
@@ -340,6 +309,9 @@ function UsersModule() {
             <span className="text-xs text-[#83918a]">{rows.length} learner{rows.length !== 1 ? 's' : ''}</span>
           </div>
         } className="mt-7">
+          {loadError && <p className="m-4 rounded-xl bg-[#fbe9e5] px-4 py-3 text-xs font-bold text-[#a04b3e]">{loadError}</p>}
+          {loading && <p className="px-6 py-10 text-sm text-[#83918a]">Loading users…</p>}
+          {!loading && !loadError && rows.length === 0 && <p className="px-6 py-10 text-sm text-[#83918a]">No users found.</p>}
           <div className="overflow-auto">
             <table className="w-full min-w-[820px] text-left text-sm">
               <THead cols={['Learner', 'Goal', 'Experience', 'Status', 'Progress', 'Joined', 'Last active', 'Actions']} />
@@ -371,7 +343,8 @@ function UsersModule() {
 }
 
 function LearningModule() {
-  const [courses, setCourses] = useState(coursesMock);
+  const [courses, setCourses] = useState<any[]>([]);
+  useEffect(() => { adminService.adminListCourses().then(rows => setCourses(rows.map((c: any) => ({ ...c, skills: c.skills || [], category: c.category || '—', difficulty: c.difficulty || '—', duration: c.duration || '—', resources: c.resources || 0, updated: c.updated_at ? new Date(c.updated_at).toLocaleDateString() : '—', status: c.status === 'published' ? 'Published' : 'Draft' })))).catch(() => setCourses([])); }, []);
   const toggle = (id: string) => setCourses(c => c.map(x => x.id === id ? { ...x, status: x.status === 'Published' ? 'Draft' : 'Published' } : x));
   return (
     <AdminShell active="learning">
@@ -380,7 +353,7 @@ function LearningModule() {
         <Btn><Plus size={14} />New course</Btn>
       </div>
       <div className="mt-7 grid gap-3 sm:grid-cols-4">
-        {[['Courses', '24'], ['Videos', '312'], ['Articles', '198'], ['Projects', '48']].map(([l, v]) => (
+        {[['Courses', courses.length.toLocaleString()], ['Videos', '—'], ['Articles', '—'], ['Projects', '—']].map(([l, v]) => (
           <div key={l} className="rounded-2xl border border-[#dbe4da] bg-[#fafbf8] p-5"><p className="text-xs text-[#83918a]">{l}</p><p className="mt-2 font-mono text-3xl text-[#1f312e]">{v}</p></div>
         ))}
       </div>
@@ -410,6 +383,8 @@ function LearningModule() {
 }
 
 function LearningPathsModule() {
+  const [paths, setPaths] = useState<any[]>([]);
+  useEffect(() => { adminService.listLearningPaths().then(rows => setPaths(rows.map((p: any) => ({ ...p, id: p.id || p._id, goal: p.goal || p.title || '—', learner: p.learner || p.user_id || '—', progress: p.progress || 0, phases: p.phases?.length || 0, status: p.status || '—', created: p.created_at ? new Date(p.created_at).toLocaleDateString() : '—' })))).catch(() => setPaths([])); }, []);
   return (
     <AdminShell active="learning-paths">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -417,7 +392,7 @@ function LearningPathsModule() {
         <Btn><Plus size={14} />Build path</Btn>
       </div>
       <div className="mt-7 grid gap-3 sm:grid-cols-4">
-        {[['Total paths', '14,320'], ['Active', '8,421'], ['Completed', '4,291'], ['Archived', '1,608']].map(([l, v]) => (
+        {[['Total paths', paths.length.toLocaleString()], ['Active', paths.filter(p => p.status === 'active').length.toLocaleString()], ['Completed', paths.filter(p => p.status === 'completed').length.toLocaleString()], ['Archived', paths.filter(p => p.status === 'archived').length.toLocaleString()]].map(([l, v]) => (
           <div key={l} className="rounded-2xl border border-[#dbe4da] bg-[#fafbf8] p-5"><p className="text-xs text-[#83918a]">{l}</p><p className="mt-2 font-mono text-3xl text-[#1f312e]">{v}</p></div>
         ))}
       </div>
@@ -426,7 +401,7 @@ function LearningPathsModule() {
           <table className="w-full min-w-[720px] text-left text-sm">
             <THead cols={['Goal', 'Learner', 'Progress', 'Phases', 'Status', 'Created', 'Actions']} />
             <tbody className="divide-y divide-[#edf0eb]">
-              {pathsMock.map(p => (
+              {paths.map(p => (
                 <tr key={p.id} className="hover:bg-[#f5f7f3]">
                   <td className="px-4 py-3.5 font-bold">{p.goal}</td>
                   <td className="px-4 py-3.5 text-[#53665f]">{p.learner}</td>
@@ -448,7 +423,8 @@ function LearningPathsModule() {
 }
 
 function SkillsModule() {
-  const [skills, setSkills] = useState(skillsMock);
+  const [skills, setSkills] = useState<any[]>([]);
+  useEffect(() => { adminService.adminListSkills({}).then(rows => setSkills(rows.map((s: any) => ({ ...s, name: s.name || s.title || s.id, learners: s.learners || 0, related: s.related || [], status: s.status === 'disabled' ? 'Disabled' : 'Active' })))).catch(() => setSkills([])); }, []);
   const toggleSkill = (name: string) => setSkills(c => c.map(s => s.name === name ? { ...s, status: s.status === 'Active' ? 'Disabled' : 'Active' } : s));
   return (
     <AdminShell active="skills">
@@ -457,7 +433,7 @@ function SkillsModule() {
         <Btn><Plus size={14} />New skill</Btn>
       </div>
       <div className="mt-7 grid gap-3 sm:grid-cols-4">
-        {[['Total skills', '486'], ['Active', '472'], ['Disabled', '14'], ['Categories', '9']].map(([l, v]) => (
+        {[['Total skills', skills.length.toLocaleString()], ['Active', skills.filter(s => s.status === 'Active').length.toLocaleString()], ['Disabled', skills.filter(s => s.status === 'Disabled').length.toLocaleString()], ['Categories', new Set(skills.map(s => s.category).filter(Boolean)).size.toLocaleString()]].map(([l, v]) => (
           <div key={l} className="rounded-2xl border border-[#dbe4da] bg-[#fafbf8] p-5"><p className="text-xs text-[#83918a]">{l}</p><p className="mt-2 font-mono text-3xl text-[#1f312e]">{v}</p></div>
         ))}
       </div>
@@ -486,7 +462,8 @@ function SkillsModule() {
 }
 
 function AssessmentsModule() {
-  const [items, setItems] = useState(assessmentsMock);
+  const [items, setItems] = useState<any[]>([]);
+  useEffect(() => { adminService.adminListAssessments({}).then(rows => setItems(rows.map((a: any) => ({ ...a, name: a.name || a.title || a.id, questions: a.questions || a.questions_count || 0, avgScore: a.avgScore || a.average_score || 0, attempts: a.attempts || 0, status: a.status === 'published' ? 'Published' : 'Draft' })))).catch(() => setItems([])); }, []);
   const toggle = (id: string) => setItems(c => c.map(a => a.id === id ? { ...a, status: a.status === 'Published' ? 'Draft' : 'Published' } : a));
   return (
     <AdminShell active="assessments">
@@ -495,7 +472,7 @@ function AssessmentsModule() {
         <Btn><Plus size={14} />New assessment</Btn>
       </div>
       <div className="mt-7 grid gap-3 sm:grid-cols-4">
-        {[['Total assessments', '312'], ['Published', '284'], ['Average score', '78%'], ['Total attempts', '42,931']].map(([l, v]) => (
+        {[['Total assessments', items.length.toLocaleString()], ['Published', items.filter(a => a.status === 'Published').length.toLocaleString()], ['Average score', items.length ? `${Math.round(items.reduce((sum, a) => sum + Number(a.avgScore || 0), 0) / items.length)}%` : '—'], ['Total attempts', items.reduce((sum, a) => sum + Number(a.attempts || 0), 0).toLocaleString()]].map(([l, v]) => (
           <div key={l} className="rounded-2xl border border-[#dbe4da] bg-[#fafbf8] p-5"><p className="text-xs text-[#83918a]">{l}</p><p className="mt-2 font-mono text-3xl text-[#1f312e]">{v}</p></div>
         ))}
       </div>
@@ -525,7 +502,8 @@ function AssessmentsModule() {
 }
 
 function ResourcesModule() {
-  const [items, setItems] = useState(resourcesMock);
+  const [items, setItems] = useState<any[]>([]);
+  useEffect(() => { adminService.adminListResources({}).then(rows => setItems(rows.map((r: any) => ({ ...r, source: r.source || r.provider || '—', type: r.type || '—', skill: r.skill || r.skills?.join(', ') || '—', quality: r.quality || r.quality_score || 0, status: r.status === 'pending_review' ? 'Pending' : 'Approved' })))).catch(() => setItems([])); }, []);
   const approve = (id: string) => setItems(c => c.map(r => r.id === id ? { ...r, status: 'Approved' } : r));
   const reject = (id: string) => setItems(c => c.filter(r => r.id !== id));
   return (
@@ -535,7 +513,7 @@ function ResourcesModule() {
         <Btn><Plus size={14} />Add resource</Btn>
       </div>
       <div className="mt-7 grid gap-3 sm:grid-cols-4">
-        {[['Total resources', '18,492'], ['Approved', '18,241'], ['Pending review', '2'], ['Quality avg', '91%']].map(([l, v]) => (
+        {[['Total resources', items.length.toLocaleString()], ['Approved', items.filter(r => r.status === 'Approved').length.toLocaleString()], ['Pending review', items.filter(r => r.status === 'Pending').length.toLocaleString()], ['Quality avg', items.length ? `${Math.round(items.reduce((sum, r) => sum + Number(r.quality || 0), 0) / items.length)}%` : '—']].map(([l, v]) => (
           <div key={l} className="rounded-2xl border border-[#dbe4da] bg-[#fafbf8] p-5"><p className="text-xs text-[#83918a]">{l}</p><p className="mt-2 font-mono text-3xl text-[#1f312e]">{v}</p></div>
         ))}
       </div>
@@ -575,6 +553,8 @@ function ResourcesModule() {
 }
 
 function RecommendationsModule() {
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  useEffect(() => { adminService.listRecommendations({}).then(setRecommendations).catch(() => setRecommendations([])); }, []);
   const weights = [
     { label: 'Skill gap match', key: 'gap', value: 30 }, { label: 'Semantic similarity', key: 'sem', value: 20 },
     { label: 'Prerequisite match', key: 'pre', value: 15 }, { label: 'Difficulty match', key: 'dif', value: 10 },
@@ -593,7 +573,7 @@ function RecommendationsModule() {
             <table className="w-full min-w-[600px] text-left text-sm">
               <THead cols={['Learner', 'Resource', 'Skill', 'Reason', 'Score', 'Status']} />
               <tbody className="divide-y divide-[#edf0eb]">
-                {recsMock.map(r => (
+                {recommendations.map(r => (
                   <tr key={r.learner + r.resource} className="hover:bg-[#f5f7f3]">
                     <td className="px-4 py-3.5 font-bold">{r.learner}</td>
                     <td className="px-4 py-3.5 text-[#53665f]">{r.resource}</td>
@@ -628,6 +608,8 @@ function RecommendationsModule() {
 
 function AIControlsModule() {
   const [enabled, setEnabled] = useState({ assistant: true, pathGen: true, assessment: true, resAnalysis: true });
+  const [aiStats, setAiStats] = useState<any | null>(null);
+  useEffect(() => { Promise.all([adminService.getAnalyticsOverview(), adminService.listFeatureFlags()]).then(([metrics, flags]) => { setAiStats(metrics); if (Array.isArray(flags)) setEnabled(current => ({ ...current, ...Object.fromEntries(flags.map((f: any) => [f.name || f.key, Boolean(f.enabled)])) })); }).catch(() => undefined); }, []);
   const [temp, setTemp] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(2048);
   const [saved, setSaved] = useState(false);
@@ -681,7 +663,7 @@ function AIControlsModule() {
         </CardWrap>
         <CardWrap title="RAG configuration" sub="Vector database and retrieval settings">
           <div className="divide-y divide-[#edf0eb]">
-            {[['Documents indexed', '18,492'], ['Embeddings', '312,481'], ['Vector DB status', 'Operational'], ['Last indexed', '1 hour ago'], ['Search quality', '94%']].map(([label, val]) => (
+            {[['Documents indexed', aiStats?.catalog?.resources?.toLocaleString() ?? '—'], ['Embeddings', '—'], ['Vector DB status', aiStats ? 'Operational' : '—'], ['Last indexed', '—'], ['Search quality', '—']].map(([label, val]) => (
               <div key={label} className="flex justify-between px-6 py-3.5">
                 <span className="text-sm text-[#83918a]">{label}</span>
                 <span className="text-sm font-bold">{val}</span>
@@ -696,9 +678,11 @@ function AIControlsModule() {
 }
 
 function AnalyticsModule() {
-  const weeks = ['Mar 04', 'Mar 11', 'Mar 18', 'Mar 25', 'Apr 01', 'Apr 08', 'Apr 15', 'Apr 22'];
-  const signups = [210, 340, 280, 410, 390, 520, 480, 610];
-  const active = [180, 290, 250, 370, 340, 460, 420, 560];
+  const [analytics, setAnalytics] = useState<any | null>(null);
+  useEffect(() => { adminService.getAnalyticsOverview().then(setAnalytics).catch(() => setAnalytics(null)); }, []);
+  const weeks: string[] = analytics?.weeks ?? [];
+  const signups: number[] = analytics?.weekly_signups ?? [];
+  const active: number[] = analytics?.weekly_active ?? [];
   const maxVal = Math.max(...signups);
   return (
     <AdminShell active="analytics">
@@ -707,7 +691,7 @@ function AnalyticsModule() {
         <Btn outline><TrendingUp size={14} />Export report</Btn>
       </div>
       <div className="mt-7 grid gap-3 sm:grid-cols-4">
-        {[['New learners (month)', '1,284', '+18%'], ['Avg sessions/week', '4.2', '+0.8'], ['Path completion rate', '62%', '+4%'], ['Avg assessment score', '78%', '+5pts']].map(([l, v, d]) => (
+        {[['Learners', analytics?.users?.learners ?? '—', 'Live'], ['Active users', analytics?.users?.active ?? '—', 'Live'], ['Completed paths', analytics?.learning_paths?.completed ?? '—', 'Live'], ['Average assessment score', analytics?.assessments?.average_score != null ? `${analytics.assessments.average_score}%` : '—', 'Live']].map(([l, v, d]) => (
           <div key={l} className="rounded-2xl border border-[#dbe4da] bg-[#fafbf8] p-5"><p className="text-xs text-[#83918a]">{l}</p><p className="mt-2 font-mono text-3xl text-[#1f312e]">{v}</p><p className="mt-2 text-xs font-bold text-[#176b65]">{d} vs last period</p></div>
         ))}
       </div>
@@ -715,6 +699,7 @@ function AnalyticsModule() {
         <div className="p-6">
           <div className="flex gap-4 mb-5 text-xs"><span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-[#176b65]" />Signups</span><span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-[#e8b044]" />Active</span></div>
           <div className="flex items-end gap-2 h-44 border-b border-l border-[#dbe4da]">
+            {weeks.length === 0 && <p className="p-8 text-sm text-[#83918a]">No analytics data recorded yet.</p>}
             {weeks.map((w, i) => (
               <div key={w} className="flex flex-1 flex-col items-center gap-1">
                 <div className="flex items-end gap-1 flex-1">
@@ -730,7 +715,7 @@ function AnalyticsModule() {
       <div className="mt-5 grid gap-5 xl:grid-cols-2">
         <CardWrap title="Top learning goals" sub="Most selected learner destinations">
           <div className="divide-y divide-[#edf0eb]">
-            {[['AI Engineer', 34], ['Data Scientist', 28], ['Frontend Developer', 18], ['Cloud Engineer', 11], ['ML Engineer', 9] as const].map(([g, pct]) => (
+            {(analytics?.top_goals ?? []).map((item: any) => [item.goal, item.percentage] as const).map(([g, pct]: readonly [string, number]) => (
               <div key={g} className="flex items-center gap-4 px-6 py-3.5">
                 <span className="flex-1 text-sm font-bold text-[#40534d]">{g}</span>
                 <div className="w-32 h-1.5 rounded-full bg-[#e3e9e1]"><div className="h-full rounded-full bg-[#176b65]" style={{ width: `${Number(pct) * 2.5}%` }} /></div>
@@ -741,7 +726,7 @@ function AnalyticsModule() {
         </CardWrap>
         <CardWrap title="Most practiced skills" sub="Skills with highest assessment activity">
           <div className="divide-y divide-[#edf0eb]">
-            {[['Python', 18420], ['Machine Learning', 12380], ['PyTorch', 8210], ['Docker', 7190], ['Transformers', 5640]].map(([s, n]) => (
+            {(analytics?.top_skills ?? []).map((item: any) => [item.skill, item.learners] as const).map(([s, n]: readonly [string, number]) => (
               <div key={s} className="flex items-center gap-4 px-6 py-3.5">
                 <span className="flex-1 text-sm font-bold text-[#40534d]">{s}</span>
                 <span className="font-mono text-xs text-[#83918a]">{(n as number).toLocaleString()} learners</span>
@@ -755,7 +740,8 @@ function AnalyticsModule() {
 }
 
 function NotificationsModule() {
-  const [items, setItems] = useState(notifMock);
+  const [items, setItems] = useState<any[]>([]);
+  useEffect(() => { adminService.adminListNotifications({}).then(rows => setItems(rows.map((n: any) => ({ ...n, type: n.type || '—', target: n.target || '—', priority: n.priority || '—', date: n.created_at ? new Date(n.created_at).toLocaleDateString() : '—', status: n.status || 'Published' })))).catch(() => setItems([])); }, []);
   const [form, setForm] = useState(false);
   const publish = (id: string) => setItems(c => c.map(n => n.id === id ? { ...n, status: 'Published' } : n));
   return (
@@ -795,6 +781,8 @@ function NotificationsModule() {
 }
 
 function AuditModule() {
+  const [logs, setLogs] = useState<any[]>([]);
+  useEffect(() => { adminService.listAuditLogs({}).then(rows => setLogs(rows.map((a: any) => ({ ...a, time: a.created_at ? new Date(a.created_at).toLocaleString() : '—', event: a.action || '—', admin: a.admin_id || '—', action: a.module || '—', severity: a.severity || 'low' })))).catch(() => setLogs([])); }, []);
   return (
     <AdminShell active="audit">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -806,7 +794,7 @@ function AuditModule() {
           <table className="w-full min-w-[680px] text-left text-sm">
             <THead cols={['Time', 'Event', 'Administrator', 'Action type', 'Severity']} />
             <tbody className="divide-y divide-[#edf0eb]">
-              {auditMock.map((a, i) => (
+              {logs.map((a, i) => (
                 <tr key={i} className="hover:bg-[#f5f7f3]">
                   <td className="px-4 py-3.5 font-mono text-xs text-[#83918a]">{a.time}</td>
                   <td className="px-4 py-3.5 font-bold">{a.event}</td>
