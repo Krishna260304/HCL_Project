@@ -80,6 +80,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const session = authService.restoreSession();
     if (session) {
       dispatch({ type: 'SET_USER', user: session.user });
+      // Validate session with backend to prevent stale localStorage states
+      wsManager.request('user.get_self', {}, 8000).catch((err) => {
+        console.warn('Session verification failed, clearing stale auth:', err);
+        authService.logout();
+        dispatch({ type: 'CLEAR_USER' });
+      });
     } else {
       dispatch({ type: 'SET_LOADING', loading: false });
     }
