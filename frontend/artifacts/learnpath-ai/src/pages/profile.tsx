@@ -229,7 +229,7 @@ export default function ProfilePage({ settings = false }: { settings?: boolean }
                   <input
                     value={currentRole}
                     onChange={e => setCurrentRole(e.target.value)}
-                    placeholder="e.g. Developer, Student"
+                    placeholder="Enter your current role"
                     className="mt-2 w-full rounded-xl border border-[#ccd8ce] bg-[#f9f9f3] px-4 py-3 text-sm outline-none focus:border-[#176b65]"
                     data-testid="input-profile-role"
                   />
@@ -242,7 +242,7 @@ export default function ProfilePage({ settings = false }: { settings?: boolean }
                   <input
                     value={goal}
                     onChange={e => setGoal(e.target.value)}
-                    placeholder="e.g. AI Engineer"
+                    placeholder="Enter your target career role"
                     className="mt-2 w-full rounded-xl border border-[#ccd8ce] bg-[#f9f9f3] px-4 py-3 text-sm outline-none focus:border-[#176b65]"
                     data-testid="input-profile-goal"
                   />

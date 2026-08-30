@@ -25,11 +25,21 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application startup and shutdown lifecycle manager."""
     settings = get_settings()
+    if settings.REQUIRE_CUDA and not settings.AI_MOCK_MODE:
+        settings.require_cuda()
     logger.info(
         f"Starting {settings.APP_NAME} in {settings.APP_ENV} mode (Mock Mode: {settings.AI_MOCK_MODE})"
     )
     gpu_info = settings.get_gpu_diagnostics()
     logger.info(f"GPU Hardware Detection: {gpu_info}")
+
+    # Load the local model before declaring the API ready. Without this, the
+    # first learner request pays for the download and CUDA model initialization.
+    if not settings.AI_MOCK_MODE and settings.LLM_PROVIDER == "local_transformers":
+        from app.llm.model import LLMFactory
+        provider = LLMFactory.get_provider(settings)
+        await provider.ensure_loaded()
+        logger.info("Local LLM is warmed up and ready for learner requests.")
 
     # Yield control during app lifetime
     yield

@@ -24,6 +24,7 @@ class Settings(BaseSettings):
 
     # Mock Mode (determines whether to bypass GPU model loading)
     AI_MOCK_MODE: bool = False
+    REQUIRE_CUDA: bool = True
 
     # LLM Settings
     LLM_PROVIDER: str = "local_transformers"  # "local_transformers", "openai_compatible", "mock"
@@ -35,7 +36,7 @@ class Settings(BaseSettings):
     LLM_LOAD_IN_8BIT: bool = False
     LLM_DEVICE_MAP: str = "auto"
     LLM_MAX_CONTEXT: int = 8192
-    LLM_MAX_TOKENS: int = 2048
+    LLM_MAX_TOKENS: int = 1024
     LLM_TEMPERATURE: float = 0.2
     LLM_TIMEOUT: int = 60
 
@@ -56,7 +57,7 @@ class Settings(BaseSettings):
     # Reranker Settings
     ENABLE_RERANKING: bool = False
     RERANKER_MODEL_NAME: str = "BAAI/bge-reranker-base"
-    RERANKER_DEVICE: str = "cpu"
+    RERANKER_DEVICE: str = "cuda"
 
     # Logging & Django
     LOG_LEVEL: str = "INFO"
@@ -100,6 +101,16 @@ class Settings(BaseSettings):
                 "vram_gb": 0.0,
                 "torch_cuda_version": None,
             }
+
+    def require_cuda(self) -> None:
+        """Fail fast instead of silently moving production ML work to CPU."""
+        import torch
+
+        if not torch.cuda.is_available():
+            raise RuntimeError(
+                "CUDA is required for production ML inference but is unavailable. "
+                "Install the NVIDIA Container Toolkit and expose a compatible GPU."
+            )
 
 
 @lru_cache()

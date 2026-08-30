@@ -39,7 +39,7 @@ class AssessmentGenerationRequest(BaseModel):
     self_reported_skills: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Self reported skill levels")
     learning_history: Optional[List[Dict[str, Any]]] = Field(default_factory=list, description="Past courses/assessments")
     required_skills: Optional[List[str]] = Field(default_factory=list, description="Required target skills")
-    num_questions: Optional[int] = Field(5, ge=1, le=25, description="Desired number of questions")
+    num_questions: Optional[int] = Field(5, ge=5, le=10, description="Desired number of questions (5 to 10)")
 
 
 class AssessmentData(BaseModel):

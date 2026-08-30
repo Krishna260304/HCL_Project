@@ -8,7 +8,6 @@ import {
   Loader2,
   Zap,
   Sparkles,
-  UserCheck,
   ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -56,15 +55,11 @@ export default function AuthPage({ register = false }: { register?: boolean }) {
     }
   }, [isAuthenticated, user, setLocation]);
 
-  const handleDemoLogin = async (persona: 'alex' | 'maya' | 'jordan') => {
+  const handleDemoLogin = async (persona: 'alex' | 'maya') => {
     setLoading(true);
     setError(null);
     try {
-      if (persona === 'alex') {
-        authService.loginAsDemoLearner();
-      } else {
-        authService.loginAsDemoLearner();
-      }
+      authService.loginAsDemoLearner();
       setLocation('/dashboard');
     } catch {
       setError('Unable to initialize demo persona session.');
@@ -83,10 +78,25 @@ export default function AuthPage({ register = false }: { register?: boolean }) {
         if (!name.trim()) {
           throw new Error('Please enter your full name.');
         }
+        if (!currentRole.trim()) {
+          throw new Error('Please enter your current role.');
+        }
+        if (!experience) {
+          throw new Error('Please select your experience level.');
+        }
+        if (!goal.trim()) {
+          throw new Error('Please enter your target career role.');
+        }
+        const experienceLevel = experience === 'beginner'
+          ? 'beginner'
+          : experience.startsWith('intermediate') ? 'intermediate' : 'advanced';
         const authUser = await registerUser({
           email: email.trim(),
           password,
           name: name.trim(),
+          current_role: currentRole.trim(),
+          experience_level: experienceLevel,
+          target_outcome: goal.trim(),
         });
         if (authUser.role === 'admin') {
           setLocation('/admin/dashboard');
@@ -273,6 +283,7 @@ export default function AuthPage({ register = false }: { register?: boolean }) {
                     <select
                       value={experience}
                       onChange={(e) => setExperience(e.target.value)}
+                      required
                       className="mt-1.5 w-full rounded-xl border border-[#ccd8ce] bg-white px-3 py-2.5 text-xs outline-none focus:border-[#176b65]"
                       data-testid="select-experience"
                     >
@@ -290,6 +301,7 @@ export default function AuthPage({ register = false }: { register?: boolean }) {
                   <input
                     value={goal}
                     onChange={(e) => setGoal(e.target.value)}
+                    required
                     placeholder="e.g. Full-Stack Web & AI Architect"
                     className="mt-1.5 w-full rounded-xl border border-[#ccd8ce] bg-white px-4 py-2.5 text-xs outline-none focus:border-[#176b65]"
                     data-testid="input-registration-goal"

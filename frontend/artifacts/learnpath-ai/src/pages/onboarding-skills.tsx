@@ -294,7 +294,7 @@ function WorkdaySkillPicker({ selectedSkills, onChange }: { selectedSkills: stri
               if (e.key === 'Enter') { e.preventDefault(); if (query.trim()) addCustom(); }
               if (e.key === 'Escape') setOpen(false);
             }}
-            placeholder={selectedSkills.length ? 'Add another skill or topic…' : 'Search 300+ CS skills (e.g. Python, PyTorch, React, Docker, System Design, SQL)…'}
+            placeholder={selectedSkills.length ? 'Add another skill or topic…' : 'Search skills or topics'}
             className="min-w-[240px] flex-1 bg-transparent px-1.5 py-1 text-sm outline-none placeholder:text-[#9aada5]"
             data-testid="input-onboarding-skills"
           />
@@ -598,6 +598,7 @@ export default function OnboardingSkills() {
         skills: selectedSkills,
         difficulty: experienceLevel,
         experience_level: experienceLevel,
+        num_questions: 5,
       });
 
       setGeneratedAssessment(assessment);
@@ -671,7 +672,7 @@ export default function OnboardingSkills() {
           practical_experience: [practicalExperience],
           self_reported_skills: selectedSkills,
         }
-      });
+      }).catch((e) => console.warn('Onboarding complete non-fatal:', e));
 
       await profileService.updateProfile({
         goals: [effectiveGoal],
@@ -679,7 +680,7 @@ export default function OnboardingSkills() {
         available_hours: weeklyHours,
         experience_level: experienceLevel,
         learning_preferences: { style: learningStyle, pace: learningPace },
-      });
+      }).catch((e) => console.warn('Profile update non-fatal:', e));
 
       const path = await learningPathService.generateLearningPath({
         goal: effectiveGoal,
@@ -693,7 +694,6 @@ export default function OnboardingSkills() {
       setStage(7); // Roadmap preview stage
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Could not generate learning path.');
-      setTimeout(() => setLocation('/dashboard'), 2000);
     } finally {
       setGeneratingPath(false);
     }
@@ -838,7 +838,7 @@ export default function OnboardingSkills() {
                   <span className="inline-flex items-center gap-2 text-xs font-bold text-[#176b65]">
                     <Sparkles size={15} className="text-[#d69323]" /> AI Goal Analyzer
                   </span>
-                  <span className="text-[11px] text-[#718a7c]">e.g. "I want to become a Machine Learning Engineer and eventually build LLM RAG applications."</span>
+                  <span className="text-[11px] text-[#718a7c]">Describe the role, work, or outcome you want to achieve.</span>
                 </div>
                 <div className="mt-3 flex gap-2">
                   <textarea
@@ -1507,22 +1507,19 @@ export default function OnboardingSkills() {
 
               {/* Phases preview */}
               <div className="mt-8 space-y-3.5">
-                {(generatedPath?.phases || [
-                  { id: '1', title: 'Targeted Remedial Foundations', progress: 0, status: 'current', estimated_time: '2 weeks', objective: 'Bridge verified skill gaps in core architectures.' },
-                  { id: '2', title: 'Applied Core Concepts & Pipeline Building', progress: 0, status: 'upcoming', estimated_time: '3 weeks', objective: 'Hands-on project implementations.' },
-                  { id: '3', title: 'Advanced Production System & Capstone Portfolio', progress: 0, status: 'upcoming', estimated_time: '4 weeks', objective: 'End-to-end production deployment.' }
-                ]).map((phase, idx) => (
+                {(generatedPath?.phases ?? []).length === 0 && <p className="rounded-2xl border border-[#dbe4da] bg-[#fafbf8] p-5 text-sm text-[#63766f]">No roadmap phases were returned. Please retry generation.</p>}
+                {(generatedPath?.phases ?? []).map((phase, idx) => (
                   <div
-                    key={phase.id || idx}
+                    key={phase.id || (phase as any).phase_id || idx}
                     className={`rounded-2xl border p-5 transition ${idx === 0 ? 'border-[#176b65] bg-[#eaf4ee] shadow-sm' : 'border-[#dce4da] bg-[#fafbf8]'}`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-mono text-xs font-bold text-[#b17820]">Phase {String(idx + 1).padStart(2, '0')}</span>
-                      <span className="text-[11px] font-bold text-[#718a7c]">{phase.estimated_time || '2-3 weeks'}</span>
+                      <span className="text-[11px] font-bold text-[#718a7c]">{phase.estimated_time || ((phase as any).estimated_duration_weeks ? `${(phase as any).estimated_duration_weeks} weeks` : '2-3 weeks')}</span>
                     </div>
                     <h3 className="mt-2 text-base font-bold text-[#1f312e]">{phase.title}</h3>
-                    {phase.objective && (
-                      <p className="mt-1.5 text-xs text-[#63766f]">{phase.objective}</p>
+                    {(phase.objective || (phase as any).description) && (
+                      <p className="mt-1.5 text-xs text-[#63766f]">{phase.objective || (phase as any).description}</p>
                     )}
                   </div>
                 ))}

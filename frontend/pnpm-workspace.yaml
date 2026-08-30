@@ -1,9 +1,7 @@
 minimumReleaseAge: 1440
 
 packages:
-  - artifacts/*
-  - lib/*
-  - lib/integrations/*
+  - artifacts/learnpath-ai
   - scripts
 
 catalog:

@@ -96,8 +96,17 @@ export default function Assistant() {
     setSending(true);
 
     try {
-      const convId = conversation?.id ?? 'default';
-      const res = await chatService.sendMessage(convId, text);
+      let convId = conversation?.id || (conversation as any)?._id;
+      if (!convId || convId === 'default') {
+        try {
+          const newConv = await chatService.createConversation('Learning session');
+          setConversation(newConv);
+          convId = newConv.id || (newConv as any)._id;
+        } catch {
+          convId = '';
+        }
+      }
+      const res = await chatService.sendMessage(convId || '', text);
       const reply =
         typeof res === 'object' && res !== null && 'reply' in res
           ? (res as { reply: string }).reply

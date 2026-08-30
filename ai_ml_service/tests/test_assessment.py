@@ -13,7 +13,7 @@ async def test_assessment_generation(async_client: AsyncClient, auth_headers: di
         "goal": "Machine Learning",
         "experience_level": "intermediate",
         "knowledge_areas": ["Python", "Deep Learning", "Machine Learning"],
-        "num_questions": 3,
+        "num_questions": 5,
     }
     response = await async_client.post("/v1/assessment/generate", json=payload, headers=auth_headers)
     assert response.status_code == 200
@@ -21,7 +21,7 @@ async def test_assessment_generation(async_client: AsyncClient, auth_headers: di
     assert res_json["success"] is True
     data = res_json["data"]
     assert "questions" in data
-    assert len(data["questions"]) > 0
+    assert 5 <= len(data["questions"]) <= 10
 
     # Validate question structure
     for q in data["questions"]:

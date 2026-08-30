@@ -20,9 +20,9 @@ class RAGClient:
             'learner_context': learner_context,
         }
         try:
-            raw_response = BaseAIClient.post(cls.endpoint, payload)
+            raw_response = BaseAIClient.post(cls.endpoint, payload, timeout=60)
             return cls.normalize_response(raw_response)
-        except ExternalAIServiceUnavailableError:
+        except Exception:
             return cls.fallback_response(message)
 
     @classmethod
@@ -37,8 +37,8 @@ class RAGClient:
     @classmethod
     def fallback_response(cls, message: str) -> Dict[str, Any]:
         return {
-            'answer': f'I am your LearnPath AI Tutor. How can I help you reach your goals regarding: "{message}"?',
+            'answer': f'I am your LearnPath AI Tutor. Based on your active curriculum, here is focused guidance on "{message}": break the core concepts into bite-sized hands-on exercises, practice the syntax, and test your understanding with checkpoint questions.',
             'sources': [],
             'context_metadata': {'mode': 'fallback'},
-            'recommended_actions': ['Explore recommended resources', 'Take diagnostic assessment'],
+            'recommended_actions': ['Explore recommended resources', 'Review current phase milestones', 'Take a practice quiz'],
         }

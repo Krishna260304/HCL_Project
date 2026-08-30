@@ -12,4 +12,4 @@ class AIConfig:
 
     @staticmethod
     def get_timeout() -> int:
-        return getattr(settings, 'AI_SERVICE_TIMEOUT', int(os.getenv('AI_SERVICE_TIMEOUT', '30')))
+        return getattr(settings, 'AI_SERVICE_TIMEOUT', int(os.getenv('AI_SERVICE_TIMEOUT', '120')))

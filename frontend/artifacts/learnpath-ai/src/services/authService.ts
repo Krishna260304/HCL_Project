@@ -64,6 +64,9 @@ export const authService = {
     email: string;
     password: string;
     name: string;
+    current_role?: string;
+    experience_level?: string;
+    target_outcome?: string;
     age_range?: string;
     country?: string;
     language?: string;

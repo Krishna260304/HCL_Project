@@ -60,14 +60,38 @@ const DEFAULT_TIMEOUT_MS = 15_000;
 const FALLBACK_CONNECT_GRACE_MS = 1_500;
 const BASE_RECONNECT_MS = 1_000;
 const MAX_RECONNECT_MS = 30_000;
-const MAX_RECONNECT_ATTEMPTS = 5;
+const MAX_RECONNECT_ATTEMPTS = 10;
+const MAX_QUEUED_REQUESTS = 100;
 
 function getBackendWsUrl(token?: string | null): string {
-  const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-  const host = import.meta.env.VITE_BACKEND_HOST ?? 'localhost:8000';
-  const path = '/ws/';
-  const base = `${proto}://${host}${path}`;
-  return token ? `${base}?token=${encodeURIComponent(token)}` : base;
+  const secureProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const configuredUrl = import.meta.env.VITE_BACKEND_WS_URL?.trim();
+  const configuredHost = import.meta.env.VITE_BACKEND_HOST?.trim();
+
+  // Use the same host the browser is on, but point at the exposed backend port.
+  // In the Compose setup the backend is published on 8086 and the frontend on 8084.
+  let rawUrl = configuredUrl || configuredHost;
+  if (!rawUrl && import.meta.env.DEV) {
+    rawUrl = `${window.location.hostname}:8086`;
+  }
+  if (!rawUrl) {
+    rawUrl = `${window.location.hostname}:8086`;
+    console.warn('[WS] VITE_BACKEND_WS_URL is not configured; using the current host on port 8086.');
+  }
+
+  const hasProtocol = /^[a-z][a-z\d+.-]*:\/\//i.test(rawUrl);
+  const url = new URL(hasProtocol ? rawUrl : `${secureProto}//${rawUrl}`, window.location.origin);
+  if (url.protocol === 'http:') url.protocol = 'ws:';
+  if (url.protocol === 'https:') url.protocol = 'wss:';
+  if (url.protocol !== 'ws:' && url.protocol !== 'wss:') {
+    throw new Error('VITE_BACKEND_WS_URL must use ws:// or wss://.');
+  }
+
+  const pathname = url.pathname.replace(/\/+$/, '');
+  if (!pathname.endsWith('/ws')) url.pathname = `${pathname}/ws/`;
+  else url.pathname = `${pathname}/`;
+  if (token) url.searchParams.set('token', token);
+  return url.toString();
 }
 
 class WebSocketManager {
@@ -84,9 +108,28 @@ class WebSocketManager {
 
   /** Open the connection. Call with a token to authenticate. */
   connect(token?: string | null): void {
-    this.token = token ?? null;
+    const nextToken = token ?? null;
+    const tokenChanged = this.token !== nextToken;
+    this.token = nextToken;
     this.intentionallyClosed = false;
-    this._openSocket();
+
+    // Authentication is established from the WebSocket URL when the socket is
+    // opened.  If a request opens an anonymous socket before session recovery
+    // completes, changing only this.token would leave that socket anonymous.
+    // Retire it so the replacement connection includes the access token.
+    if (tokenChanged && this.ws) {
+      const previousSocket = this.ws;
+      this.ws = null;
+      previousSocket.close(1000, 'Refreshing connection authentication');
+    }
+
+    try {
+      this._openSocket();
+    } catch (error) {
+      this.ws = null;
+      this._notifyConnectionListeners('disconnected');
+      console.error('[WS] Could not open backend connection:', error);
+    }
   }
 
   /** Disconnect and stop auto-reconnect. */
@@ -100,11 +143,12 @@ class WebSocketManager {
       try {
         const fallback = fallbackProvider.handleAction(action, payload);
         resolve(fallback);
-      } catch (err) {
+      } catch {
         // Safe fallback
       }
     });
     this.pending.clear();
+    this.messageQueue = [];
     this._notifyConnectionListeners('disconnected');
   }
 
@@ -142,7 +186,7 @@ class WebSocketManager {
           try {
             const fallback = fallbackProvider.handleAction(action, payload) as T;
             resolve(fallback);
-          } catch (e) {
+          } catch {
             reject(new Error(`Request '${action}' timed out after ${timeoutMs}ms`));
           }
         }, timeoutMs);
@@ -186,8 +230,6 @@ class WebSocketManager {
           this.request<T>(action, payload, timeoutMs).then(resolve).catch(reject);
         }
       }, FALLBACK_CONNECT_GRACE_MS);
-
-      // If connected before graceTimer finishes, onopen handles queue
     });
   }
 
@@ -215,15 +257,18 @@ class WebSocketManager {
 
     try {
       const url = getBackendWsUrl(this.token);
-      this.ws = new WebSocket(url);
+      const socket = new WebSocket(url);
+      this.ws = socket;
 
-      this.ws.onopen = () => {
+      socket.onopen = () => {
+        if (this.ws !== socket) return;
         this.reconnectAttempts = 0;
         this._notifyConnectionListeners('connected');
         this._flushQueue();
       };
 
-      this.ws.onmessage = (evt) => {
+      socket.onmessage = (evt) => {
+        if (this.ws !== socket) return;
         let msg: WSIncoming;
         try {
           msg = JSON.parse(evt.data as string) as WSIncoming;
@@ -234,7 +279,9 @@ class WebSocketManager {
         this._handleMessage(msg);
       };
 
-      this.ws.onclose = (evt) => {
+      socket.onclose = (evt) => {
+        // A superseded socket must not clear or reconnect over its replacement.
+        if (this.ws !== socket) return;
         this.ws = null;
         if (!this.intentionallyClosed) {
           this._scheduleReconnect();
@@ -252,9 +299,10 @@ class WebSocketManager {
           }
         });
         this.pending.clear();
+        this.messageQueue = [];
       };
 
-      this.ws.onerror = () => {
+      socket.onerror = () => {
         // Handled in onclose
       };
     } catch (e) {

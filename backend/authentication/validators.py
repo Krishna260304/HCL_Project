@@ -1,5 +1,6 @@
 from typing import Any, Dict
-from core.validators import validate_required_fields, validate_email, validate_password_strength
+from core.constants import ExperienceLevel
+from core.validators import validate_required_fields, validate_email, validate_password_strength, validate_enum
 
 def validate_register_payload(data: Dict[str, Any]) -> Dict[str, Any]:
     validate_required_fields(data, ['email', 'password', 'name'])
@@ -11,6 +12,9 @@ def validate_register_payload(data: Dict[str, Any]) -> Dict[str, Any]:
         'email': email,
         'password': password,
         'name': name,
+        'current_role': str(data.get('current_role', '')).strip(),
+        'experience_level': validate_enum(data.get('experience_level', 'beginner'), ExperienceLevel.ALL_LEVELS, 'experience_level'),
+        'target_outcome': str(data.get('target_outcome', '')).strip(),
         'age_range': data.get('age_range'),
         'country': data.get('country'),
         'language': data.get('language', 'en'),

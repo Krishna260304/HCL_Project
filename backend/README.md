@@ -69,10 +69,8 @@ LearnPath AI is an AI-powered personalized learning platform backend built with 
 ## Running the Backend
 
 ### Environment Configuration
-Copy `.env.example` to `.env` and configure credentials:
-```bash
-cp .env.example .env
-```
+Provide runtime secrets through your deployment platform or Docker secret manager.
+Do not commit `.env` files or copy configuration templates into production images.
 
 ### Direct Execution
 ```bash
@@ -85,6 +83,5 @@ daphne -b 0.0.0.0 -p 8000 config.asgi:application
 ```
 
 ### Docker Execution
-```bash
-docker-compose up --build
-```
+The canonical production deployment is defined by the root `docker-compose.yml`.
+The backend is hosted separately from the static frontend.

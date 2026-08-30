@@ -21,10 +21,13 @@ class LearningPathService:
             v_skills = {str(k): float(v) for k, v in request.verified_skills.items()}
         elif isinstance(request.verified_skills, list):
             for item in request.verified_skills:
-                s_name = item.get("skill_id") or item.get("skill")
-                if s_name:
-                    s_score = item.get("verified_score", item.get("score", 0.7))
-                    v_skills[s_name] = float(s_score)
+                if isinstance(item, dict):
+                    s_name = item.get("skill_id") or item.get("skill")
+                    if s_name:
+                        s_score = item.get("verified_score", item.get("score", 0.7))
+                        v_skills[str(s_name)] = float(s_score)
+                elif isinstance(item, str) and item.strip():
+                    v_skills[item.strip()] = 0.7
 
         gaps: List[Dict[str, Any]] = []
         for g in request.skill_gaps or []:

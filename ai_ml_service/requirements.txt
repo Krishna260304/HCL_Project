@@ -12,9 +12,13 @@ transformers>=4.40.0
 sentence-transformers>=2.7.0
 accelerate>=0.29.0
 bitsandbytes>=0.43.0; sys_platform != "win32"
+datasets>=2.19.0
+peft>=0.11.0
+trl>=0.9.0
 
 # Vector Search & RAG
-qdrant-client>=1.9.0
+# Keep the client aligned with qdrant/qdrant:v1.9.2 in docker-compose.yml.
+qdrant-client==1.9.2
 
 # Workflows & Graph Orchestration
 langgraph>=0.0.30

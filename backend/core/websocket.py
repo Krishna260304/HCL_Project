@@ -90,7 +90,9 @@ class BaseAsyncConsumer(AsyncJsonWebsocketConsumer):
 
         action = content.get('action', '')
         request_id = content.get('request_id')
-        payload = content.get('payload', {})
+        payload = content.get('payload') if content.get('payload') is not None else content.get('data', {})
+        if not isinstance(payload, dict):
+            payload = {}
 
         if action == 'ping':
             await self.send_json(success_response(action='pong', request_id=request_id, data={'timestamp': content.get('timestamp')}))
@@ -327,6 +329,7 @@ class UnifiedGatewayConsumer(BaseAsyncConsumer):
             'admin.users.get': lambda payload, user: AdminService.get_user(payload, user),
             'admin.users.update_status': lambda payload, user: AdminService.update_user_status(payload, user),
             'admin.users.delete': lambda payload, user: AdminService.delete_user(payload, user),
+            'admin.recommendations.list': lambda payload, user: AdminService.list_recommendations(payload, user),
 
             'admin.onboarding.questions.list': lambda payload, user: AdminService.list_onboarding_questions(payload, user),
             'admin.onboarding.questions.create': lambda payload, user: AdminService.create_onboarding_question(payload, user),

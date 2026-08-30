@@ -18,6 +18,10 @@ class RecommendationRepository:
         return list(cursor)
 
     @classmethod
+    def find_all(cls, query: Optional[Dict[str, Any]] = None, limit: int = 100) -> List[Dict[str, Any]]:
+        return list(cls.get_collection().find(query or {}).sort('created_at', -1).limit(limit))
+
+    @classmethod
     def find_by_id(cls, rec_id: str) -> Optional[Dict[str, Any]]:
         if not ObjectId.is_valid(rec_id):
             return None
