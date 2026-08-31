@@ -31,6 +31,13 @@ export default defineConfig({
     strictPort: true,
     host: '0.0.0.0',
     allowedHosts: true,
+    proxy: {
+      '/ws': {
+        target: 'http://localhost:8086',
+        ws: true,
+        changeOrigin: true,
+      },
+    },
     fs: {
       strict: true,
     },

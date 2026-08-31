@@ -95,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           dispatch({ type: 'SET_LOADING', loading: false });
         });
     } else {
+      wsManager.connect();
       dispatch({ type: 'SET_LOADING', loading: false });
     }
   }, []);

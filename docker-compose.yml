@@ -139,7 +139,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        # ws://<server-LAN-ip>:8086 — baked into the JS bundle at build time
+        # Leave these empty for same-origin /ws/ proxying. Set them only when
+        # the backend is hosted separately from the frontend.
         VITE_BACKEND_WS_URL: ${VITE_BACKEND_WS_URL:-}
         VITE_BACKEND_HOST: ${VITE_BACKEND_HOST:-}
     restart: unless-stopped

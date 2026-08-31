@@ -58,28 +58,57 @@ const MAX_RECONNECT_MS = 30_000;
 const MAX_RECONNECT_ATTEMPTS = 10;
 const MAX_QUEUED_REQUESTS = 100;
 
-function getBackendWsUrl(token?: string | null): string {
-  const secureProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+export function getBackendWsUrl(token?: string | null): string {
+  const isBrowser = typeof window !== 'undefined';
+  const secureProto = isBrowser && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const configuredUrl = import.meta.env.VITE_BACKEND_WS_URL?.trim();
   const configuredHost = import.meta.env.VITE_BACKEND_HOST?.trim();
 
-  // Use the same host the browser is on, but point at the exposed backend port.
-  // In the Compose setup the backend is published on 8086 and the frontend on 8084.
-  let rawUrl = configuredUrl || configuredHost;
-  if (!rawUrl && import.meta.env.DEV) {
-    rawUrl = `${window.location.hostname}:8086`;
-  }
-  if (!rawUrl) {
-    rawUrl = `${window.location.hostname}:8086`;
-    console.warn('[WS] VITE_BACKEND_WS_URL is not configured; using the current host on port 8086.');
+  let rawUrl = '';
+
+  if (isBrowser) {
+    const currentHostname = window.location.hostname;
+
+    if (configuredUrl) {
+      try {
+        // A relative URL keeps the browser on the frontend origin. In the
+        // container deployment Nginx proxies /ws/ to backend:8000, while the
+        // backend remains available externally on host port 8086.
+        if (configuredUrl.startsWith('/')) {
+          const sameOrigin = new URL(configuredUrl, window.location.origin);
+          sameOrigin.protocol = secureProto;
+          rawUrl = sameOrigin.toString();
+        } else {
+          const hasProto = /^[a-z][a-z\d+.-]*:\/\//i.test(configuredUrl);
+          const parsed = new URL(hasProto ? configuredUrl : `${secureProto}//${configuredUrl}`, window.location.origin);
+          // If the configuredUrl points to localhost/127.0.0.1 but the user is accessing via another hostname/IP, adapt it
+          if ((parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') &&
+              currentHostname && currentHostname !== 'localhost' && currentHostname !== '127.0.0.1') {
+            parsed.hostname = currentHostname;
+          }
+          rawUrl = parsed.toString();
+        }
+      } catch {
+        rawUrl = configuredUrl;
+      }
+    } else if (configuredHost) {
+      rawUrl = `${secureProto}//${configuredHost}`;
+    } else {
+      // Same-origin is the safe default for both the Nginx production image
+      // and the Vite development server (which proxies /ws/ to port 8086).
+      rawUrl = `${secureProto}//${window.location.host}`;
+    }
+  } else {
+    rawUrl = configuredUrl || configuredHost || 'localhost:8086';
   }
 
   const hasProtocol = /^[a-z][a-z\d+.-]*:\/\//i.test(rawUrl);
-  const url = new URL(hasProtocol ? rawUrl : `${secureProto}//${rawUrl}`, window.location.origin);
+  const baseOrigin = isBrowser ? window.location.origin : 'http://localhost:8084';
+  const url = new URL(hasProtocol ? rawUrl : `${secureProto}//${rawUrl}`, baseOrigin);
   if (url.protocol === 'http:') url.protocol = 'ws:';
   if (url.protocol === 'https:') url.protocol = 'wss:';
   if (url.protocol !== 'ws:' && url.protocol !== 'wss:') {
-    throw new Error('VITE_BACKEND_WS_URL must use ws:// or wss://.');
+    url.protocol = secureProto;
   }
 
   const pathname = url.pathname.replace(/\/+$/, '');
@@ -106,6 +135,16 @@ class WebSocketManager {
     const tokenChanged = this.token !== nextToken;
     this.token = nextToken;
     this.intentionallyClosed = false;
+
+    // If authentication changes while an anonymous socket is still opening,
+    // replace it so the new socket carries the token in its URL.
+    if (tokenChanged && this.ws?.readyState === WebSocket.CONNECTING) {
+      const previousSocket = this.ws;
+      this.ws = null;
+      previousSocket.close(1000, 'Refreshing connection authentication');
+      this._openSocket();
+      return;
+    }
 
     // If socket is already OPEN, authenticate over the active socket without tearing it down
     if (this.isConnected) {
@@ -332,11 +371,27 @@ class WebSocketManager {
   }
 
   private _send(msg: WSMessage): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      this._rejectPending(msg.request_id, new Error('WebSocket is not connected. Please retry shortly.'));
+      return;
+    }
+
     try {
       this.ws!.send(JSON.stringify(msg));
     } catch (e) {
       console.error('[WS] Send failed:', e);
+      this._rejectPending(msg.request_id, new Error('WebSocket send failed. Please retry shortly.'));
     }
+  }
+
+  private _rejectPending(requestId: string | undefined, error: Error): void {
+    if (!requestId) return;
+    const pending = this.pending.get(requestId);
+    if (!pending) return;
+    clearTimeout(pending.timer);
+    this.pending.delete(requestId);
+    this.messageQueue = this.messageQueue.filter((queued) => queued.request_id !== requestId);
+    pending.reject(error);
   }
 
   private _flushQueue(): void {
