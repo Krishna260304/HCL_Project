@@ -1,6 +1,12 @@
-**/.env
-**/.env.local
-**/.env.production
+# ─── Environment & Secrets ──────────────────────────────────────────────────
+.env
+.env.*
+*.env
+*.pem
+*.key
+secrets/
+
+# ─── Python & Virtual Environments ──────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
@@ -24,38 +30,47 @@ sdist/
 var/
 wheels/
 *.sqlite3
-backend/tests/
-backend/.pytest_cache/
-backend/.coverage
-backend/htmlcov/
+db.sqlite3
+
+# ─── Testing & Coverage Caches ───────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# ─── Node & Frontend ─────────────────────────────────────────────────────────
 node_modules/
 **/node_modules/
 **/dist/
 **/.cache/
+.pnpm-store/
 *.tsbuildinfo
+artifacts/*/dist/
+staticfiles/
+
+# ─── Logs & Runtime Temp ─────────────────────────────────────────────────────
 *.log
 logs/
+*.swp
+*.swo
+*.tmp
+*.bak
+*~
+
+# ─── IDE & OS Metadata ───────────────────────────────────────────────────────
 .idea/
 .vscode/
 .DS_Store
 Thumbs.db
-*.swp
-*.swo
-artifacts/*/dist/
-staticfiles/
 
-# Local-only data, model artifacts, and training outputs
-**/training/
-**/data/
-**/datasets/
+# ─── ML Checkpoints & Cache ──────────────────────────────────────────────────
 **/checkpoints/
 **/outputs/
-**/artifacts/*.jsonl
 **/*.safetensors
 **/*.bin
 **/*.pt
 **/*.pth
 wandb/
 mlruns/
-coverage.xml
-htmlcov/
+huggingface_cache/
+

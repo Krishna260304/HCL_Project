@@ -8,7 +8,7 @@ class LearningPathClient:
     @classmethod
     def generate_learning_path(cls, payload: Dict[str, Any]) -> Dict[str, Any]:
         try:
-            raw_response = BaseAIClient.post(cls.endpoint, payload, timeout=120)
+            raw_response = BaseAIClient.post(cls.endpoint, payload, timeout=60)
             return cls.normalize_response(raw_response, payload)
         except Exception:
             return cls.fallback_response(payload)

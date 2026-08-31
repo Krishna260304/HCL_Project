@@ -13,10 +13,10 @@ class MCQQuestion(BaseModel):
     correct_answer: str = Field(..., description="Exact string matching one of the options")
     skill: Optional[str] = Field(None, description="Target skill evaluated")
     skill_id: Optional[str] = Field(None, description="Target skill identifier (alias)")
-    topic: str = Field(..., description="Specific topic within skill")
+    topic: str = Field("Core Principles", description="Specific topic within skill")
     difficulty: str = Field("intermediate", description="beginner, intermediate, advanced")
-    learning_objective: str = Field(..., description="Learning outcome evaluated by question")
-    explanation: str = Field(..., description="Explanation of why the correct answer is right")
+    learning_objective: str = Field("Assess core domain proficiency", description="Learning outcome evaluated by question")
+    explanation: str = Field("Mastery of fundamental principles ensures correct application.", description="Explanation of why the correct answer is right")
 
     def get_skill(self) -> str:
         return self.skill or self.skill_id or "General"

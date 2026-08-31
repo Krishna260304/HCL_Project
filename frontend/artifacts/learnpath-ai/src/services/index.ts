@@ -293,7 +293,7 @@ export const assessmentService = {
     num_questions?: number;
   }): Promise<Assessment> {
     const numQuestions = Math.min(10, Math.max(5, payload.num_questions ?? 5));
-    return wsManager.request<Assessment>('assessment.generate_ai', { ...payload, num_questions: numQuestions }, 45_000);
+    return wsManager.request<Assessment>('assessment.generate_ai', { ...payload, num_questions: numQuestions }, 90_000);
   },
 
   async startAttempt(assessmentId: string): Promise<AssessmentAttempt> {
@@ -350,7 +350,7 @@ export const learningPathService = {
   },
 
   async generateLearningPath(payload: Record<string, unknown> = {}): Promise<LearningPath> {
-    return wsManager.request<LearningPath>('learning_path.generate', payload, 60_000);
+    return wsManager.request<LearningPath>('learning_path.generate', payload, 90_000);
   },
 
   async completePhase(phaseId: string): Promise<{ status: string }> {

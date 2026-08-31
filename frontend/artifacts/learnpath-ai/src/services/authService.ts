@@ -73,14 +73,14 @@ export const authService = {
   }): Promise<AuthResponse> {
     const data = await wsManager.request<AuthResponse>('auth.register', payload);
     tokenStorage.set(data.tokens, data.user);
-    wsManager.connect(data.tokens.access_token);
+    wsManager.authenticate(data.tokens.access_token).catch(() => {});
     return data;
   },
 
   async login(email: string, password: string): Promise<AuthResponse> {
     const data = await wsManager.request<AuthResponse>('auth.login', { email, password });
     tokenStorage.set(data.tokens, data.user);
-    wsManager.connect(data.tokens.access_token);
+    wsManager.authenticate(data.tokens.access_token).catch(() => {});
     return data;
   },
 

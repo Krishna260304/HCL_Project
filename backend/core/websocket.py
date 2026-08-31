@@ -146,6 +146,12 @@ class BaseAsyncConsumer(AsyncJsonWebsocketConsumer):
 
         try:
             response_data = await self.dispatch_handler(handler, payload, request_id)
+            if action in ('auth.login', 'auth.register') and isinstance(response_data, dict):
+                tokens = response_data.get('tokens', {})
+                access_token = tokens.get('access_token')
+                if access_token:
+                    await self._authenticate_token(access_token)
+                    await self._register_channels()
             await self.send_json(success_response(
                 action=action,
                 request_id=request_id,

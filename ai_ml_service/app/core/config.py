@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     LLM_LOAD_IN_8BIT: bool = False
     LLM_DEVICE_MAP: str = "auto"
     LLM_MAX_CONTEXT: int = 8192
-    LLM_MAX_TOKENS: int = 1024
+    LLM_MAX_TOKENS: int = 2048
     LLM_TEMPERATURE: float = 0.2
     LLM_TIMEOUT: int = 60
 

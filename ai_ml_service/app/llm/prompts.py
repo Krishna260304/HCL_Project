@@ -32,8 +32,8 @@ Generate a structured analysis containing:
 """,
 
     "assessment_generation_v1": """
-You are an expert technical psychometrician and educator.
-Generate a rigorous diagnostic multiple-choice assessment for:
+You are an expert technical psychometrician.
+Generate a high-quality diagnostic multiple-choice assessment for:
 
 Goal: {{ goal }}
 Experience Level: {{ experience_level }}
@@ -41,12 +41,17 @@ Target Skills: {{ skills | join(', ') }}
 Knowledge Areas: {{ knowledge_areas | join(', ') }}
 Number of Questions: {{ num_questions }}
 
-For EACH question:
-- Question stem MUST be precise and clear.
-- Exactly 4 distinct options (no duplicate options).
-- Exactly 1 unambiguous correct answer matching one of the options verbatim.
-- Detailed explanation justifying why the correct answer is right and why others are wrong.
-- Associated skill, topic, difficulty (beginner, intermediate, advanced), and learning objective.
+Requirements for EACH question:
+- question: Clear, concise technical question stem testing practical knowledge.
+- options: Exactly 4 plausible and distinct choices.
+- correct_answer: The exact string verbatim from options that is correct.
+- skill: Target skill evaluated.
+- topic: Subtopic tested.
+- difficulty: "{{ experience_level }}"
+- learning_objective: 1 concise sentence stating the evaluated outcome.
+- explanation: 1 concise sentence explaining why the correct answer is right.
+
+Ensure all {{ num_questions }} questions are fully completed in valid JSON. Keep question stems and explanations concise for fast evaluation.
 """,
 
     "question_repair_v1": """
@@ -111,18 +116,29 @@ Explain why this resource directly advances the learner's path:
 """,
 
     "learning_path_v1": """
-Design a comprehensive, sequential, multi-phase personalized learning roadmap for the learner:
+You are a principal curriculum architect.
+Design a concise 3-phase personalized learning roadmap for:
 Goal: {{ goal }}
 Verified Skills: {{ verified_skills }}
 Skill Gaps: {{ skill_gaps }}
-Available Resources: {{ resources }}
 Timeline: {{ timeline }}
-Preferences: {{ preferences }}
 
-Construct:
-- Multi-phase structured progression (e.g. Foundations -> Core Mastery -> Applied Projects -> Advanced Deployment).
-- Phase title, objective, prerequisite checks, assigned resources, hands-on project deliverables, milestone criteria, and duration.
-Ensure NO circular dependencies and strict prerequisite validation.
+Generate exactly 3 sequential phases:
+- Phase 1: Foundations & Core Setup (order: 1)
+- Phase 2: Architecture & Hands-on Implementation (order: 2)
+- Phase 3: Production Deployment & Capstone Portfolio (order: 3)
+
+For each phase include:
+- phase_id ("phase_1", "phase_2", "phase_3")
+- title, description, and 1-sentence objective
+- order (1, 2, 3)
+- skills: target skills
+- resources: 1-2 recommended resources (resource_id, title, resource_type: "video" or "documentation", duration_minutes)
+- projects: 1 hands-on milestone project (project_id, title, description, difficulty, estimated_hours, deliverables)
+- milestone: 1-sentence completion criteria
+- estimated_duration_weeks: (int, e.g. 2, 3, 3)
+
+Return ONLY valid JSON matching the schema. Keep descriptions concise for fast execution.
 """,
 
     "rag_v1": """

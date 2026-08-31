@@ -1,0 +1,21 @@
+{
+  "policy": "Only ingest datasets whose license and intended use have been reviewed. Keep attribution with every record.",
+  "sources": [
+    {
+      "name": "uci",
+      "uri": "https://archive.ics.uci.edu/",
+      "loader": "hf",
+      "dataset": "mstz/uci-ml-repository",
+      "license": "REVIEW_REQUIRED",
+      "enabled": false
+    },
+    {
+      "name": "kaggle",
+      "uri": "https://www.kaggle.com/datasets",
+      "loader": "local",
+      "dataset": "",
+      "license": "REVIEW_REQUIRED",
+      "enabled": false
+    }
+  ]
+}

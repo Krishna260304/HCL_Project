@@ -107,14 +107,15 @@ class WebSocketManager {
     this.token = nextToken;
     this.intentionallyClosed = false;
 
-    // Authentication is established from the WebSocket URL when the socket is
-    // opened.  If a request opens an anonymous socket before session recovery
-    // completes, changing only this.token would leave that socket anonymous.
-    // Retire it so the replacement connection includes the access token.
-    if (tokenChanged && this.ws) {
-      const previousSocket = this.ws;
-      this.ws = null;
-      previousSocket.close(1000, 'Refreshing connection authentication');
+    // If socket is already OPEN, authenticate over the active socket without tearing it down
+    if (this.isConnected) {
+      if (tokenChanged && nextToken) {
+        this.authenticate(nextToken).catch((e) => {
+          console.warn('[WS] In-line authentication failed, falling back to reconnect:', e);
+          this._reconnectWithToken(nextToken);
+        });
+      }
+      return;
     }
 
     try {
@@ -124,6 +125,31 @@ class WebSocketManager {
       this._notifyConnectionListeners('disconnected');
       console.error('[WS] Could not open backend connection:', error);
     }
+  }
+
+  /** Explicitly authenticate the current open connection with a JWT token */
+  async authenticate(token: string): Promise<boolean> {
+    this.token = token;
+    if (this.isConnected) {
+      try {
+        await this.request('auth.authenticate', { token }, 10_000);
+        return true;
+      } catch (err) {
+        console.warn('[WS] auth.authenticate request failed:', err);
+        return false;
+      }
+    }
+    return false;
+  }
+
+  private _reconnectWithToken(token: string): void {
+    if (this.ws) {
+      const prev = this.ws;
+      this.ws = null;
+      prev.close(1000, 'Re-authenticating connection');
+    }
+    this.token = token;
+    this._openSocket();
   }
 
   /** Disconnect and stop auto-reconnect. */
@@ -144,6 +170,9 @@ class WebSocketManager {
   /** Update the token (e.g. after refresh) without reconnecting. */
   updateToken(token: string): void {
     this.token = token;
+    if (this.isConnected) {
+      this.authenticate(token).catch(() => {});
+    }
   }
 
   /** True when the socket is OPEN. */

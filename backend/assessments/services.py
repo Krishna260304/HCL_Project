@@ -214,7 +214,7 @@ class AssessmentService:
                 'options': q.get('options', []),
                 'correct_answer': q.get('correct_answer'),
                 'explanation': q.get('explanation', ''),
-                'skill_id': q.get('skill_id', ''),
+                'skill_id': q.get('skill_id') or q.get('skill', ''),
                 'topic': q.get('topic', 'general'),
                 'difficulty': q.get('difficulty', 'medium'),
                 'learning_objective': q.get('learning_objective', ''),

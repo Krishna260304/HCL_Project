@@ -7,37 +7,37 @@ from pydantic import BaseModel, Field
 
 
 class PhaseResource(BaseModel):
-    resource_id: str
-    title: str
-    resource_type: str = Field("video", description="video, article, course, documentation, exercise, lab")
+    resource_id: str = "res_01"
+    title: str = "Core Concept Guide"
+    resource_type: str = Field("documentation", description="video, article, course, documentation, exercise, lab")
     url: Optional[str] = None
-    duration_minutes: int = 30
+    duration_minutes: int = 45
     skills: List[str] = Field(default_factory=list)
     is_mandatory: bool = True
 
 
 class PhaseProject(BaseModel):
-    project_id: str
-    title: str
-    description: str
+    project_id: str = "proj_01"
+    title: str = "Applied Milestone Project"
+    description: str = "Practical hands-on implementation reinforcing phase objectives."
     difficulty: str = "intermediate"
-    estimated_hours: int = 5
-    deliverables: List[str] = Field(default_factory=list)
+    estimated_hours: int = 6
+    deliverables: List[str] = Field(default_factory=lambda: ["Source Code", "Documentation"])
 
 
 class PhaseAssessment(BaseModel):
-    assessment_id: Optional[str] = None
-    title: str
+    assessment_id: Optional[str] = "asm_01"
+    title: str = "Milestone Diagnostic Evaluation"
     type: str = "milestone_quiz"
     pass_score: float = 0.70
 
 
 class LearningPhase(BaseModel):
-    phase_id: str
-    title: str
-    description: str
-    objective: Optional[str] = None
-    order: int
+    phase_id: str = "phase_1"
+    title: str = "Phase 1: Core Foundations"
+    description: str = "Foundational concepts and practical applications."
+    objective: Optional[str] = "Master core domain principles and practical tooling."
+    order: int = 1
     skills: List[str] = Field(default_factory=list)
     prerequisites: List[str] = Field(default_factory=list)
     resources: List[Union[PhaseResource, Dict[str, Any]]] = Field(default_factory=list)
@@ -46,7 +46,7 @@ class LearningPhase(BaseModel):
     assessment_id: Optional[str] = None
     milestone: str = "Phase milestone reached"
     estimated_duration_weeks: int = 2
-    explanation: Optional[str] = None
+    explanation: Optional[str] = "Core prerequisite progression."
 
 
 class LearningPathRequest(BaseModel):

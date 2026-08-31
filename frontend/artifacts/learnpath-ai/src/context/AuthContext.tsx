@@ -81,11 +81,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (session) {
       dispatch({ type: 'SET_USER', user: session.user });
       // Validate session with backend to prevent stale localStorage states
-      wsManager.request('user.get_self', {}, 8000).catch((err) => {
-        console.warn('Session verification failed, clearing stale auth:', err);
-        authService.logout();
-        dispatch({ type: 'CLEAR_USER' });
-      });
+      wsManager.request('user.get_self', {}, 15000)
+        .catch((err: any) => {
+          if (err?.code === 'AUTHENTICATION_ERROR' || (err?.message && err.message.toLowerCase().includes('expired'))) {
+            console.warn('Session expired or invalidated by backend, clearing auth:', err);
+            authService.logout();
+            dispatch({ type: 'CLEAR_USER' });
+          } else {
+            console.warn('Initial session ping deferred/reconnecting:', err);
+          }
+        })
+        .finally(() => {
+          dispatch({ type: 'SET_LOADING', loading: false });
+        });
     } else {
       dispatch({ type: 'SET_LOADING', loading: false });
     }

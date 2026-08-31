@@ -7,6 +7,7 @@ __pycache__/
 .installed.cfg
 .eggs/
 .env
+.env.*
 .venv/
 env/
 venv/
@@ -22,12 +23,9 @@ parts/
 sdist/
 var/
 wheels/
-tests/
 .pytest_cache/
 .coverage
 htmlcov/
-pytest.ini
-conftest.py
 *.sqlite3
 db.sqlite3
 logs/
@@ -38,8 +36,7 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
-.dockerignore
-.env.example
 *.pem
 *.key
 secrets/
+

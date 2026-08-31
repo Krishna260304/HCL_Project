@@ -10,7 +10,7 @@ class AssessmentGenerationClient:
         payload = dict(payload)
         payload['num_questions'] = max(5, min(10, int(payload.get('num_questions', 5))))
         try:
-            raw_response = BaseAIClient.post(cls.endpoint, payload, timeout=120)
+            raw_response = BaseAIClient.post(cls.endpoint, payload, timeout=60)
             return cls.normalize_response(raw_response)
         except Exception:
             return cls.fallback_response(payload)
